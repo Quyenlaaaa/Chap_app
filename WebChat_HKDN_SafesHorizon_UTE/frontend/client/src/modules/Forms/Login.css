@@ -1,0 +1,71 @@
+/* Đặt nền màu sáng cho toàn bộ trang */
+.bg-light {
+    background-image: url('../../assets/bgr.jpg'); /* Thay đường dẫn bằng đường dẫn đến ảnh của bạn */
+    background-size: cover; /* Đảm bảo ảnh phủ toàn bộ màn hình */
+    background-position: center; /* Đặt vị trí ảnh ở giữa */
+    background-repeat: no-repeat; /* Không lặp lại ảnh */
+    height: 100vh; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Đặt chiều cao toàn màn hình và căn giữa nội dung theo cả hai chiều */
+.h-screen {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Căn chỉnh trung tâm và tạo bóng đổ cho hộp form */
+.shadow-lg {
+    box-shadow: 8px 8px 8px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Đặt kích thước cho form và thêm viền tròn */
+.form-container {
+    background-color: #524d4d;
+    width: 600px;
+    height: 800px;
+    border-radius: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.form-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+/* Kiểu chữ cho phần mô tả */
+.form-description {
+    font-size: 1.2rem;
+    font-weight: 300;
+    color: #b01b1b;
+    margin-bottom: 50px;
+}
+
+/* Kiểu thông báo lỗi và thành công */
+.text-red-500 {
+    color: #e74c3c;
+}
+
+.text-green-500 {
+    color: #2ecc71;
+}
+
+/* Kiểu cho input và các trường thông tin */
+.input-field {
+    width: 75%;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
