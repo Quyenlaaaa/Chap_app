@@ -20,29 +20,63 @@ const LoginForm = () => {
         }
     }, []);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    // const handleSubmit = (e) => {
+    //     e.preventDefault();
 
-        if (!data.email || !data.password) {
-            setError("Vui lòng nhập đầy đủ thông tin.");
-            setTimeout(() => setError(""), 1000);
-            return;
+    //     if (!data.email || !data.password) {
+    //         setError("Vui lòng nhập đầy đủ thông tin.");
+    //         setTimeout(() => setError(""), 1000);
+    //         return;
+    //     }
+
+    //     // Save email to local storage if "Remember Me" is checked
+    //     if (rememberMe) {
+    //         localStorage.setItem('rememberedEmail', data.email);
+    //     } else {
+    //         localStorage.removeItem('rememberedEmail');
+    //     }
+
+    //     localStorage.setItem('user:token', 'mocked_token');
+    //     setSuccessMessage("Đăng nhập thành công.");
+    //     setTimeout(() => {
+    //         setSuccessMessage("");
+    //         navigate('/');
+    //     }, 700);
+    // };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault(); // Ngăn chặn hành động mặc định của form
+
+        try {
+            const response = await fetch("http://localhost:8090/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: data.email,
+                    password: data.password,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Đăng nhập thành công, lưu token và điều hướng
+                console.log("Login successful:", result);
+                localStorage.setItem("token", result.result.token); // Lưu token vào localStorage
+                navigate("/admin"); // Điều hướng đến trang Home
+            } else {
+                // Hiển thị lỗi từ API
+                alert(`Login failed: ${result.message || "Unknown error"}`);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Something went wrong, please try again.");
         }
-
-        // Save email to local storage if "Remember Me" is checked
-        if (rememberMe) {
-            localStorage.setItem('rememberedEmail', data.email);
-        } else {
-            localStorage.removeItem('rememberedEmail');
-        }
-
-        localStorage.setItem('user:token', 'mocked_token');
-        setSuccessMessage("Đăng nhập thành công.");
-        setTimeout(() => {
-            setSuccessMessage("");
-            navigate('/');
-        }, 700);
     };
+
+    
 
     return (
         <div className="bg-light h-screen flex items-center justify-center">
@@ -74,7 +108,7 @@ const LoginForm = () => {
                         onChange={(e) => setData({ ...data, password: e.target.value })}
                     />
 
-                    <div className="mb-6 w-[75%] flex items-center">
+                    {/* <div className="mb-6 w-[75%] flex items-center">
                         <input
                             type="checkbox"
                             id="rememberMe"
@@ -83,7 +117,7 @@ const LoginForm = () => {
                             className="mr-2"
                         />
                         <label htmlFor="rememberMe" className="text-gray-700">Lưu thông tin đăng nhập</label>
-                    </div>
+                    </div> */}
 
                     <Button label="Sign in" type="submit" className="w-[75%] mb-2" />
                 </form>

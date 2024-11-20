@@ -5,14 +5,8 @@ import SidebarMenu from './modules/Messenger/Sidebar/SidebarMenu';
 import Form from './modules/Forms/Login'; 
 import ForgotPassword from './modules/Forms/ForgotPassword';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ResetPassword from './modules/Forms/ResetPassword';
 
-/*const ProtectedRoute = ({ children, auth = false }) => {
-  const isLoggedIn = localStorage.getItem('user:token') !== null;
-  if (!isLoggedIn && auth) {
-    return <Navigate to='/login' />;
-  }
-  return children;
-};*/
 
 function App() {
   return (
@@ -29,6 +23,7 @@ function App() {
         <Route path="/login" element={<Form isSignInPage={true} />} />
         <Route path="/signup" element={<Form isSignInPage={false} />} />
         <Route path="/forgot_password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword/>} />
       </Routes>
     </div>
   );

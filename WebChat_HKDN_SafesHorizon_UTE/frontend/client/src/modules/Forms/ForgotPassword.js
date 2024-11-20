@@ -1,27 +1,45 @@
 import { useState } from "react";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!email) {
-            setMessage("Vui lòng nhập email.");
+            setError("Vui lòng nhập email.");
             return;
         }
 
-        // Mock sending reset email logic
-        setMessage("Email đặt lại mật khẩu đã được gửi.");
-        setTimeout(() => {
-            setMessage("");
-            navigate('/login'); 
-        }, 1000);
+        try {
+            const response = await fetch("http://localhost:8090/api/auth/forgot-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setMessage("Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra email.");
+                setTimeout(() => {
+                    navigate("/login");
+                }, 2000);
+            } else {
+                setError(result.message || "Có lỗi xảy ra.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            setError("Có lỗi xảy ra. Vui lòng thử lại sau.");
+        }
     };
 
     return (
@@ -31,15 +49,16 @@ const ForgotPassword = () => {
                 <div className="text-lg font-light mb-10">Nhập email của bạn để đặt lại mật khẩu</div>
 
                 {message && <div className="text-green-500 mb-4">{message}</div>}
+                {error && <div className="text-red-500 mb-4">{error}</div>}
 
                 <form className="flex flex-col items-center w-full" onSubmit={handleSubmit}>
-                    <Input 
-                        label="Email" 
-                        type="email" 
-                        name="email" 
-                        placeholder="Nhập email" 
-                        className="mb-6 w-[75%]" 
-                        value={email} 
+                    <Input
+                        label="Email"
+                        type="email"
+                        name="email"
+                        placeholder="Nhập email"
+                        className="mb-6 w-[75%]"
+                        value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
                     <Button label="Gửi yêu cầu" type="submit" className="w-[75%]" />
