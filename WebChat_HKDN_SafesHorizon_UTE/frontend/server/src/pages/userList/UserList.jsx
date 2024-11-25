@@ -55,6 +55,29 @@ export default function UserList() {
     fetchUsers();
   }, [token]);
 
+  // Handle role change
+  const handleRoleChange = async (id, newRole) => {
+    try {
+      const response = await fetch(`http://localhost:8090/api/users/${id}/roles`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Thêm Authorization header
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+      if (response.ok) {
+        // Update the local state after successful role change
+        setData(data.map((item) => (item.id === id ? { ...item, role: newRole } : item)));
+      } else {
+        alert('Failed to update role');
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+      alert('Error updating role');
+    }
+  };
+
   const handleDelete = (id) => {
     setData(data.filter((item) => item.id !== id));
   };
@@ -74,14 +97,19 @@ export default function UserList() {
         );
       },
     },
-    // {field: "isVerify", headerName: "isVerify", width: 150},
-    {field: "role", headerName: "Role", width: 150},
+    { field: 'role', headerName: 'Role', width: 150, 
+      renderCell: (params) => (
+        <select 
+          value={params.row.role} 
+          onChange={(e) => handleRoleChange(params.row.id, e.target.value)}
+        >
+          <option value="NORMAL">Normal User</option>
+          <option value="MODERATOR">Moderator</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+      )
+    },
     { field: "email", headerName: "Email", width: 200 },
-    // {
-    //   field: "status",
-    //   headerName: "Status",
-    //   width: 100,
-    // },
     {
       field: "action",
       headerName: "Action",
