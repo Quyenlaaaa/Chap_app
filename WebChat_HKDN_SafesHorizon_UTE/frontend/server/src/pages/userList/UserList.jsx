@@ -40,7 +40,7 @@ export default function UserList() {
           id: user.id || index,
           username: user.name,
           email: user.email,
-          avatar: user.imagePath ? `http://localhost:8090/profile/${user.imagePath}` : 'default-avatar-url.png',
+          avatar: user.imagePath ? `http://localhost:8090/profile/${user.imagePath}` : 'http://localhost:8090/profile/default-avatar-url.png',
           isVerify: user.isVerify,
           role: user.roleResponse.name || 'User',
           status: user.status || 'Active',

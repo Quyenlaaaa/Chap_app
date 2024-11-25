@@ -4,54 +4,51 @@
 
 .newUserForm {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column; /* Thay vì wrap, dùng column để sắp xếp các input theo chiều dọc */
+  align-items: flex-start; /* Căn chỉnh các phần tử sang bên trái */
 }
 
 .newUserItem {
-  width: 400px;
+  width: 40%; /* Mở rộng full chiều rộng */
   display: flex;
   flex-direction: column;
   margin-top: 10px;
-  margin-right: 20px;
 }
 
 .newUserItem > label {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   font-size: 14px;
   font-weight: 600;
   color: rgb(151, 150, 150);
 }
 
 .newUserItem > input {
-  height: 20px;
+  height: 40px; /* Cải thiện chiều cao để dễ nhìn */
   padding: 10px;
   border: 1px solid gray;
   border-radius: 5px;
+  width: 100%; /* Đảm bảo input chiếm full chiều rộng */
 }
 
-.newUserGender > input {
-  margin-top: 15px;
+.newUserSelect {
+  height: 40px;
+  padding: 10px;
+  border-radius: 5px;
+  width: 100%; /* Đảm bảo select box có chiều rộng đầy đủ */
 }
 
-.newUserGender>label{
-    margin: 10px;
-    font-size: 18px;
-    color: #555;
+.newUserButton {
+  width: 200px;
+  border: none;
+  background-color: darkblue;
+  color: white;
+  padding: 10px 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-top: 30px;
+  cursor: pointer;
 }
 
-.newUserSelect{
-    height: 40px;
-    border-radius: 5px;
-}
-
-.newUserButton{
-    width: 200px;
-    border: none;
-    background-color: darkblue;
-    color: white;
-    padding: 7px 10px;
-    font-weight: 600;
-    border-radius: 10px;
-    margin-top: 30px;
-    cursor: pointer;
+.newUserButton:hover {
+  background-color: #003366; /* Thêm hiệu ứng hover cho nút */
 }
