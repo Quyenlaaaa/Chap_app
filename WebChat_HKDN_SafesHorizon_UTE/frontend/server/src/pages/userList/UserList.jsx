@@ -5,16 +5,17 @@ import { userRows } from "../../dummyData";
 import { Link } from "react-router-dom";
 // import { useState } from "react";
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function UserList() {
   const [data, setData] = useState(userRows);
   
-  const [error, setError] = useState(null); // Để lưu lỗi nếu có
+  const [error, setError] = useState(null); 
 
-  // Token giả định (thay bằng cách lấy token từ localStorage hoặc context của bạn)
   const token = localStorage.getItem('token');
 
-  // Gọi API để lấy danh sách người dùng
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -22,7 +23,7 @@ export default function UserList() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`, // Thêm Authorization header
+            Authorization: `Bearer ${token}`, 
           },
         });
         if (response.status === 401) {
@@ -48,7 +49,7 @@ export default function UserList() {
         setData(formattedData);
       } catch (error) {
         console.error('Failed to fetch user data:', error);
-        setError(error.message); // Lưu lỗi vào state
+        setError(error.message); 
       }
     };
 
@@ -69,17 +70,35 @@ export default function UserList() {
       if (response.ok) {
         // Update the local state after successful role change
         setData(data.map((item) => (item.id === id ? { ...item, role: newRole } : item)));
+        toast.success('Role updated successfully!');
       } else {
-        alert('Failed to update role');
+        toast.error('Failed to update role. Please try again!');
       }
     } catch (error) {
       console.error('Error updating role:', error);
-      alert('Error updating role');
+      toast.error('Error updating role. Please try again later.');
     }
   };
 
-  const handleDelete = (id) => {
-    setData(data.filter((item) => item.id !== id));
+  // Hàm xóa người dùng
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8090/api/users/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`, 
+        },
+      });
+
+      if (response.ok) {
+        setData(data.filter((item) => item.id !== id));
+        toast.success('User deleted successfully!');
+      } else {
+        toast.error('Failed to delete user. Please try again!');
+      }
+    } catch (error) {
+      toast.error('Error deleting user. Please try again later.');
+    }
   };
   
   const columns = [
