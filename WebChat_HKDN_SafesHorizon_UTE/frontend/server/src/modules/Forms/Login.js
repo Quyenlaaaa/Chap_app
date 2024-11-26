@@ -108,16 +108,7 @@ const LoginForm = () => {
                         onChange={(e) => setData({ ...data, password: e.target.value })}
                     />
 
-                    {/* <div className="mb-6 w-[75%] flex items-center">
-                        <input
-                            type="checkbox"
-                            id="rememberMe"
-                            checked={rememberMe}
-                            onChange={() => setRememberMe(!rememberMe)}
-                            className="mr-2"
-                        />
-                        <label htmlFor="rememberMe" className="text-gray-700">Lưu thông tin đăng nhập</label>
-                    </div> */}
+                    
 
                     <Button label="Sign in" type="submit" className="w-[75%] mb-2" />
                 </form>

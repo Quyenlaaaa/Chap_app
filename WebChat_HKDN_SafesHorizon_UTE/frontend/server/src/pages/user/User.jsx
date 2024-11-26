@@ -18,7 +18,7 @@ export default function User() {
           <button className="userAddButton">Create</button>
         </Link>
       </div>
-      <div className="userContainer">
+      {/* <div className="userContainer">
         <div className="userShow">
           <div className="userShowTop">
             <img
@@ -117,7 +117,7 @@ export default function User() {
             </div>
           </form>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
