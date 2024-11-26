@@ -1,93 +1,133 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Button from "../../components/Button";
+import TogglePasswordButton from "../../components/TogglePasswordButton";
 import Input from "../../components/Input";
-import { useNavigate } from 'react-router-dom';
-import './Login.css';
+import "./Login.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const LoginForm = () => {
-    const [data, setData] = useState({ email: '', password: '' });
+const Form = ({ isSignInPage = true }) => {
+    const [data, setData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [verificationMessage, setVerificationMessage] = useState("");
     const navigate = useNavigate();
+    const location = useLocation();
 
+    // Kiểm tra trạng thái xác thực email từ URL
     useEffect(() => {
-        // Load saved email if "remember me" was previously selected
-        const savedEmail = localStorage.getItem('rememberedEmail');
-        if (savedEmail) {
-            setData((prevData) => ({ ...prevData, email: savedEmail }));
-            setRememberMe(true);
+        const params = new URLSearchParams(location.search);
+        const verified = params.get("verified");
+        const error = params.get("error");
+
+        if (verified === "true") {
+            setVerificationMessage("Xác thực email thành công! Bạn có thể đăng nhập.");
+        } else if (error) {
+            setError("Xác thực email thất bại. Vui lòng thử lại.");
         }
-    }, []);
+    }, [location]);
 
-    // const handleSubmit = (e) => {
-    //     e.preventDefault();
-
-    //     if (!data.email || !data.password) {
-    //         setError("Vui lòng nhập đầy đủ thông tin.");
-    //         setTimeout(() => setError(""), 1000);
-    //         return;
-    //     }
-
-    //     // Save email to local storage if "Remember Me" is checked
-    //     if (rememberMe) {
-    //         localStorage.setItem('rememberedEmail', data.email);
-    //     } else {
-    //         localStorage.removeItem('rememberedEmail');
-    //     }
-
-    //     localStorage.setItem('user:token', 'mocked_token');
-    //     setSuccessMessage("Đăng nhập thành công.");
-    //     setTimeout(() => {
-    //         setSuccessMessage("");
-    //         navigate('/');
-    //     }, 700);
-    // };
+    // Lấy email đã lưu nếu chọn "Lưu thông tin đăng nhập"
+    useEffect(() => {
+        if (isSignInPage) {
+            const savedEmail = localStorage.getItem("rememberedEmail");
+            if (savedEmail) {
+                setData((prevData) => ({ ...prevData, email: savedEmail }));
+                setRememberMe(true);
+            }
+        }
+    }, [isSignInPage]);
 
     const handleSubmit = async (e) => {
-        e.preventDefault(); // Ngăn chặn hành động mặc định của form
-
+        e.preventDefault(); // Ngăn hành động mặc định của form
+        setError("");
+        setSuccessMessage("");
+    
         try {
-            const response = await fetch("http://localhost:8090/api/auth/login", {
+            const url = isSignInPage
+                ? "http://localhost:8090/api/auth/login"
+                : "http://localhost:8090/api/auth/register";
+    
+            const payload = isSignInPage
+                ? { email: data.email, password: data.password }
+                : { name: data.name, email: data.email, password: data.password };
+    
+            if (!isSignInPage && data.password !== data.confirmPassword) {
+                toast.error("Mật khẩu và mật khẩu xác nhận không khớp.");
+                return;
+            }
+    
+            const response = await fetch(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    email: data.email,
-                    password: data.password,
-                }),
+                body: JSON.stringify(payload),
             });
-
+    
             const result = await response.json();
-
+    
             if (response.ok) {
-                // Đăng nhập thành công, lưu token và điều hướng
-                console.log("Login successful:", result);
-                localStorage.setItem("token", result.result.token); // Lưu token vào localStorage
-                navigate("/admin"); // Điều hướng đến trang Home
+                if (isSignInPage) {
+                    localStorage.setItem("token", result.result.token);
+                    if (rememberMe) {
+                        localStorage.setItem("rememberedEmail", data.email);
+                    } else {
+                        localStorage.removeItem("rememberedEmail");
+                    }
+                    toast.success("Đăng nhập thành công!");
+                    navigate("/home");
+                } else {
+                    toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
+                    setData({ name: "", email: "", password: "", confirmPassword: "" });
+                }
             } else {
-                // Hiển thị lỗi từ API
-                alert(`Login failed: ${result.message || "Unknown error"}`);
+                if (result.code === 1016) {
+                    toast.warn("Tài khoản chưa xác thực email.");
+                } else {
+                    toast.error(result.message || "Có lỗi xảy ra.");
+                }
             }
         } catch (error) {
             console.error("Error:", error);
-            alert("Something went wrong, please try again.");
+            toast.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
         }
     };
-
     
-
     return (
+    
         <div className="bg-light h-screen flex items-center justify-center">
-            <div className="bg-white w-[600px] h-[600px] shadow-lg rounded-lg flex flex-col justify-center items-center">
-                <div className="text-4xl font-extrabold">ĐĂNG NHẬP</div>
-                <div className="text-xl font-light mb-14">Chào mừng quay trở lại</div>
+            <div className="bg-white w-[600px] h-auto shadow-lg rounded-lg p-6">
+                <h2 className="text-4xl font-extrabold text-center mb-2">
+                    {isSignInPage ? "ĐĂNG NHẬP" : "ĐĂNG KÝ"}
+                </h2>
+                <p className="text-xl font-light text-center mb-6">
+                    {isSignInPage ? "Chào mừng quay trở lại" : "Hãy trải nghiệm ngay nào"}
+                </p>
 
-                {error && <div className="text-red-500 mb-4">{error}</div>}
-                {successMessage && <div className="text-green-500 mb-4">{successMessage}</div>}
+                {verificationMessage && (
+                    <div className="text-green-500 text-center mb-4">{verificationMessage}</div>
+                )}
+                {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+                {successMessage && <div className="text-green-500 text-center mb-4">{successMessage}</div>}
 
                 <form className="flex flex-col items-center w-full" onSubmit={handleSubmit}>
+                    {!isSignInPage && (
+                        <Input
+                            label="Họ và tên"
+                            type="text"
+                            name="name"
+                            placeholder="Nhập tên của bạn"
+                            className="mb-6 w-[75%]"
+                            value={data.name}
+                            onChange={(e) => setData({ ...data, name: e.target.value })}
+                        />
+                    )}
+
                     <Input
                         label="Email"
                         type="email"
@@ -97,24 +137,84 @@ const LoginForm = () => {
                         value={data.email}
                         onChange={(e) => setData({ ...data, email: e.target.value })}
                     />
-                    
-                    <Input
-                        label="Mật khẩu"
-                        type="password"
-                        name="password"
-                        placeholder="Nhập mật khẩu"
-                        className="mb-6 w-[75%]"
-                        value={data.password}
-                        onChange={(e) => setData({ ...data, password: e.target.value })}
-                    />
 
-                    
+                    <div className="relative mb-6 w-[75%]">
+                        <Input
+                            label="Mật khẩu"
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="Nhập mật khẩu"
+                            className="w-full"
+                            value={data.password}
+                            onChange={(e) => setData({ ...data, password: e.target.value })}
+                        />
+                        <TogglePasswordButton
+                            showPassword={showPassword}
+                            setShowPassword={setShowPassword}
+                        />
+                    </div>
 
-                    <Button label="Sign in" type="submit" className="w-[75%] mb-2" />
+                    {!isSignInPage && (
+                        <div className="relative mb-6 w-[75%]">
+                            <Input
+                                label="Xác nhận mật khẩu"
+                                type={showConfirmPassword ? "text" : "password"}
+                                name="confirmPassword"
+                                placeholder="Nhập lại mật khẩu"
+                                className="w-full"
+                                value={data.confirmPassword}
+                                onChange={(e) => setData({ ...data, confirmPassword: e.target.value })}
+                            />
+                            <TogglePasswordButton
+                                showPassword={showConfirmPassword}
+                                setShowPassword={setShowConfirmPassword}
+                            />
+                        </div>
+                    )}
+
+                    {isSignInPage && (
+                        <div className="mb-6 w-[75%] flex items-center">
+                            <input
+                                type="checkbox"
+                                id="rememberMe"
+                                checked={rememberMe}
+                                onChange={() => setRememberMe(!rememberMe)}
+                                className="mr-2"
+                            />
+                            <label htmlFor="rememberMe" className="text-gray-700">
+                                Lưu thông tin đăng nhập
+                            </label>
+                        </div>
+                    )}
+
+                    <Button label={isSignInPage ? "Đăng nhập" : "Đăng ký"} type="submit" className="w-[75%] mb-4" />
                 </form>
+
+                {isSignInPage && (
+                    <div className="text-center mt-4">
+                        <span
+                            className="text-primary cursor-pointer underline"
+                            onClick={() => navigate("/forgot_password")}
+                        >
+                            Quên mật khẩu?
+                        </span>
+                    </div>
+                )}
+
+                <div className="text-center mt-2">
+                    {isSignInPage ? "Bạn chưa có tài khoản?" : "Bạn đã có tài khoản?"}{" "}
+                    <span
+                        className="text-primary cursor-pointer underline"
+                        onClick={() => navigate(`/${isSignInPage ? "signup" : "login"}`)}
+                    >
+                        {isSignInPage ? "Đăng ký ngay" : "Đăng nhập"}
+                    </span>
+                </div>
             </div>
         </div>
+        
+        
     );
 };
 
-export default LoginForm;
+export default Form;
