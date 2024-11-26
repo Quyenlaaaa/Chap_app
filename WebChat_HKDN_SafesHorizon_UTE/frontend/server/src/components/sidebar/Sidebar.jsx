@@ -33,6 +33,12 @@ export default function Sidebar() {
               Phòng chat
             </li>
             </Link>
+            <Link to="/auth" className="link">
+            <li className="sidebarListItem">
+              <TrendingUp className="sidebarIcon" />
+              Đổi mật khẩu
+            </li>
+            </Link>
           </ul>
         </div>
       </div>

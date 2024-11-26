@@ -10,6 +10,7 @@ import RoomList from "./pages/roomList/RoomList";
 import Room from "./pages/room/room";
 import NewRoom from "./pages/newRoom/NewRoom"; 
 import LoginForm from './modules/Forms/Login'; 
+import ChangePassword from "./pages/password/ChangePassword";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
                 <Route path="/rooms" element={<RoomList />} />
                 <Route path="/room/:roomId" element={<Room />} />
                 <Route path="/newroom" element={<NewRoom />} />
+                <Route path="/auth" element={<ChangePassword />} />
               </Routes>
             </div>
           </>
