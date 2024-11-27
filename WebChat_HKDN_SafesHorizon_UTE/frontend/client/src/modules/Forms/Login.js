@@ -4,6 +4,8 @@ import Button from "../../components/Button";
 import TogglePasswordButton from "../../components/TogglePasswordButton";
 import Input from "../../components/Input";
 import "./Login.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Form = ({ isSignInPage = true }) => {
     const [data, setData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
@@ -44,21 +46,21 @@ const Form = ({ isSignInPage = true }) => {
         e.preventDefault(); // Ngăn hành động mặc định của form
         setError("");
         setSuccessMessage("");
-
+    
         try {
             const url = isSignInPage
                 ? "http://localhost:8090/api/auth/login"
                 : "http://localhost:8090/api/auth/register";
-
+    
             const payload = isSignInPage
                 ? { email: data.email, password: data.password }
                 : { name: data.name, email: data.email, password: data.password };
-
+    
             if (!isSignInPage && data.password !== data.confirmPassword) {
-                setError("Mật khẩu và mật khẩu xác nhận không khớp.");
+                toast.error("Mật khẩu và mật khẩu xác nhận không khớp.");
                 return;
             }
-
+    
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -66,36 +68,42 @@ const Form = ({ isSignInPage = true }) => {
                 },
                 body: JSON.stringify(payload),
             });
-
+    
             const result = await response.json();
-
+            console.log(result)
+    
             if (response.ok) {
                 if (isSignInPage) {
-                    // Lưu token khi đăng nhập thành công
                     localStorage.setItem("token", result.result.token);
                     if (rememberMe) {
                         localStorage.setItem("rememberedEmail", data.email);
                     } else {
                         localStorage.removeItem("rememberedEmail");
                     }
-                    navigate("/home");
+                    toast.success("Đăng nhập thành công!");
+                    if (result.result.userResponse.roleResponse.name === "ADMIN")
+                        navigate("/admin/users");
+                    else
+                        navigate("/client/home");
                 } else {
-                    setSuccessMessage("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
+                    toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
                     setData({ name: "", email: "", password: "", confirmPassword: "" });
                 }
             } else {
-                if (result.code = 1016)
-                    setError("Tài khoản chưa xác thực email");
-                else
-                setError(result.message || "Có lỗi xảy ra.");
+                if (result.code === 1016) {
+                    toast.warn("Tài khoản chưa xác thực email.");
+                } else {
+                    toast.error(result.message || "Có lỗi xảy ra.");
+                }
             }
         } catch (error) {
             console.error("Error:", error);
-            setError("Có lỗi xảy ra. Vui lòng thử lại sau.");
+            toast.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
         }
     };
-
+    
     return (
+    
         <div className="bg-light h-screen flex items-center justify-center">
             <div className="bg-white w-[600px] h-auto shadow-lg rounded-lg p-6">
                 <h2 className="text-4xl font-extrabold text-center mb-2">
@@ -201,13 +209,15 @@ const Form = ({ isSignInPage = true }) => {
                     {isSignInPage ? "Bạn chưa có tài khoản?" : "Bạn đã có tài khoản?"}{" "}
                     <span
                         className="text-primary cursor-pointer underline"
-                        onClick={() => navigate(`/${isSignInPage ? "signup" : "login"}`)}
+                        onClick={() => navigate(`${isSignInPage ? "/signup" : "/login"}`)}
                     >
                         {isSignInPage ? "Đăng ký ngay" : "Đăng nhập"}
                     </span>
                 </div>
             </div>
         </div>
+        
+        
     );
 };
 

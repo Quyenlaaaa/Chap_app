@@ -22,7 +22,7 @@ function App() {
   return (
     // <div className="flex h-screen">
       <Routes>
-      <Route path="admin/login" element={<Form isSignInPage={true} />} />
+      <Route path="/login" element={<Form isSignInPage={true} />} />
         <Route path="*" element={
           <>
             <Topbar />
@@ -43,7 +43,7 @@ function App() {
           </>
         } />
 
-        <Route path="client/" element={<Navigate to="/login" replace />} />
+        {/* <Route path="client/" element={<Navigate to="/login" replace />} /> */}
         <Route path="client/home" element={
           <div className="flex h-full w-full">
             <SidebarMenu className="h-full" />
@@ -51,10 +51,10 @@ function App() {
             <ChatWindow className="h-full" />
           </div>
         } />
-        <Route path="client/login" element={<Form isSignInPage={true} />} />
-        <Route path="client/signup" element={<Form isSignInPage={false} />} />
-        <Route path="client/forgot_password" element={<ForgotPassword />} />
-        <Route path="client/reset-password" element={<ResetPassword/>} />
+        {/* <Route path="client/login" element={<Form isSignInPage={true} />} /> */}
+        <Route path="/signup" element={<Form isSignInPage={false} />} />
+        <Route path="/forgot_password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword/>} />
       </Routes>
     // </div>
   );
