@@ -11,12 +11,13 @@ import Room from "./pages/room/room";
 import NewRoom from "./pages/newRoom/NewRoom"; 
 import LoginForm from './modules/Forms/Login'; 
 import ChangePassword from "./pages/password/ChangePassword";
+import Form from "./modules/Forms/Login";
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginForm/>} />
+      <Route path="/login" element={<Form isSignInPage={true} />} />
         <Route path="*" element={
           <>
             <Topbar />
