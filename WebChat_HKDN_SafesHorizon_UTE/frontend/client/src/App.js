@@ -1,5 +1,5 @@
 import './App.css';
-// import Sidebar from './modules/Messenger/Sidebar/Sidebar';
+import SidebarMsg from './modules/Messenger/SidebarMsg/SidebarMsg';
 import ChatWindow from './modules/Messenger/ChatWindow/ChatWindow';
 import SidebarMenu from './modules/Messenger/SidebarMsg/SidebarMenu';
 import Form from './modules/Forms/Login'; 
@@ -47,7 +47,7 @@ function App() {
           <div className="flex h-screen">
           <div className="flex h-full w-full">
             <SidebarMenu className="h-full" />
-            {/* <Sidebar className="h-full" /> */}
+            <SidebarMsg className="h-full" />
             <ChatWindow className="h-full" />
             </div>
           </div>
