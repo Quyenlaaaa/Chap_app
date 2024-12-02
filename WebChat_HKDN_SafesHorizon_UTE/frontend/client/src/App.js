@@ -16,6 +16,7 @@ import Sidebar from "./components/sidebar/Sidebar";
 import Topbar from "./components/topbar/Topbar";
 import Home from "./pages/home/Home";
 import ChangePassword from "./pages/password/ChangePassword";
+import Chat from './pages/chat/Chat';
 
 
 function App() {
@@ -43,7 +44,7 @@ function App() {
           </>
         } />
         {/* <Route path="client/" element={<Navigate to="/login" replace />} /> */}
-        <Route path="client/home" element={
+        {/* <Route path="client/home" element={
           <div className="flex h-screen">
           <div className="flex h-full w-full">
             <SidebarMenu className="h-full" />
@@ -51,7 +52,8 @@ function App() {
             <ChatWindow className="h-full" />
             </div>
           </div>
-        } />
+        } /> */}
+        <Route path="client/home" element={<Chat />} />
         {/* <Route path="client/login" element={<Form isSignInPage={true} />} /> */}
         <Route path="/signup" element={<Form isSignInPage={false} />} />
         <Route path="/forgot_password" element={<ForgotPassword />} />
