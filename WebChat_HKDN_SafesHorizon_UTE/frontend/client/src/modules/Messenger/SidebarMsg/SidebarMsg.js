@@ -64,7 +64,7 @@ const SidebarMsg = ({ onGroupSelect }) => {
               key={group.id}
               id={group.id}
               name={group.name}
-              onClick={onGroupSelect} // Hàm callback để chọn nhóm
+              onClick={() => onGroupSelect(group.id)} // Hàm callback để chọn nhóm
             />
           ))
         ) : (

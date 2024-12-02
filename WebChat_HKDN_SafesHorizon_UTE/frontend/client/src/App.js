@@ -54,6 +54,7 @@ function App() {
           </div>
         } /> */}
         <Route path="client/home" element={<Chat />} />
+        <Route path="client/room/:groupId" element={<Chat />} /> 
         {/* <Route path="client/login" element={<Form isSignInPage={true} />} /> */}
         <Route path="/signup" element={<Form isSignInPage={false} />} />
         <Route path="/forgot_password" element={<ForgotPassword />} />
