@@ -18,6 +18,7 @@ const ChatWindow = ({ groupId }) => {
   const [memberCount, setMemberCount] = useState(0);
   const [users, setUsers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const stompClientRef = useRef(null);
 
@@ -46,6 +47,32 @@ const ChatWindow = ({ groupId }) => {
         setTimeout(reconnectWebSocket, 5000);
       }
     );
+  };
+
+  // Fetch current user data
+  const fetchCurrentUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Token không hợp lệ. Đăng nhập lại để tiếp tục.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8090/api/users/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Lỗi khi tải thông tin người dùng");
+      }
+
+      const data = await response.json();
+      setCurrentUser(data.result); // Set current user data
+    } catch (error) {
+      console.error("Lỗi:", error);
+    }
   };
 
   // Fetch data from the server
@@ -120,6 +147,7 @@ const ChatWindow = ({ groupId }) => {
 
     fetchData();
     setupWebSocket();
+    fetchCurrentUser(); // Fetch current user data
 
     return () => {
       if (stompClientRef.current) {
@@ -130,26 +158,50 @@ const ChatWindow = ({ groupId }) => {
   }, [groupId]);
 
   // Handle sending message
-  const handleSendMessage = (messageText, imageBase64) => {
+  const handleSendMessage = (messageText, file) => {
     if (!stompClientRef.current || !stompClientRef.current.connected) {
       alert("Không thể gửi tin nhắn. Kết nối WebSocket không thành công.");
       reconnectWebSocket();
       return;
     }
-
-    const messagePayload = {
-      roomId: groupId,
-      messageText: messageText,
-      imageBase64: imageBase64 || "", // Gửi ảnh dưới dạng Base64 nếu có
-    };
-
-    stompClientRef.current.send(
-      `/app/chat/${groupId}`,
-      {},
-      JSON.stringify(messagePayload)
-    );
+  
+    // Nếu có file, chuyển đổi file sang Base64
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Data = reader.result; // Chỉ lấy dữ liệu Base64
+        const messagePayload = {
+          roomId: groupId,
+          messageText: messageText,
+          imageBase64: base64Data, // Gửi file dưới dạng Base64
+        };
+  
+        // Gửi tin nhắn qua WebSocket
+        stompClientRef.current.send(
+          `/app/chat/${groupId}`,
+          {},
+          JSON.stringify(messagePayload)
+        );
+      };
+  
+      reader.readAsDataURL(file); // Đọc file và chuyển sang Base64
+    } else {
+      // Nếu không có file, chỉ gửi tin nhắn
+      const messagePayload = {
+        roomId: groupId,
+        messageText: messageText,
+        imageBase64: "", // Không có file
+      };
+  
+      stompClientRef.current.send(
+        `/app/chat/${groupId}`,
+        {},
+        JSON.stringify(messagePayload)
+      );
+    }
   };
 
+  
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -242,44 +294,13 @@ const ChatWindow = ({ groupId }) => {
     }
   };
 
-  // const handleDeleteMessage = async (messageId) => {
-  //   const confirmDelete = window.confirm("Bạn có chắc muốn xóa tin nhắn này?");
-  //   if (!confirmDelete) return;
-
-  //   // Loại bỏ tin nhắn khỏi UI ngay lập tức
-  //   setMessages((prevMessages) =>
-  //     prevMessages.filter((msg) => msg.id !== messageId)
-  //   );
-
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     const response = await fetch(
-  //       `http://localhost:8090/api/messages/${messageId}`,
-  //       {
-  //         method: "DELETE",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     if (!response.ok) {
-  //       throw new Error("Xóa tin nhắn thất bại");
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     alert("Đã xảy ra lỗi khi xóa tin nhắn. Vui lòng thử lại.");
-  //     // Phục hồi tin nhắn nếu lỗi
-  //     fetchMessages();
-  //   }
-  // };
   const handleDeleteMessage = (messageId) => {
     const confirmDelete = window.confirm("Bạn có chắc muốn xóa tin nhắn này?");
     if (!confirmDelete) return;
-  
+
     const token = localStorage.getItem("token");
     console.log("Xóa tin nhắn với ID:", messageId); // Kiểm tra xem hàm có được gọi không
-  
+
     // Gửi yêu cầu xóa tin nhắn
     fetch(`http://localhost:8090/api/messages/${messageId}`, {
       method: "DELETE",
@@ -287,7 +308,7 @@ const ChatWindow = ({ groupId }) => {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((response) => response.json())  // Chuyển đổi phản hồi thành JSON
+      .then((response) => response.json()) // Chuyển đổi phản hồi thành JSON
       .then((data) => {
         if (data.code === 1000) {
           setMessages((prevMessages) =>
@@ -303,7 +324,6 @@ const ChatWindow = ({ groupId }) => {
         // Có thể phục hồi tin nhắn nếu cần thiết
       });
   };
-  
 
   if (!groupId) {
     return (
@@ -352,14 +372,18 @@ const ChatWindow = ({ groupId }) => {
         </div>
 
         <div className="flex-1 p-4 overflow-y-auto">
-          {messages.map((msg, index) => (
+          {messages.map((msg) => (
             <Message
               key={msg.id} // Đảm bảo sử dụng ID tin nhắn thay vì index
               image={msg.userResponse.imagePath} // Avatar của user gửi tin nhắn
+              userName={msg.userResponse.name} // Tên người gửi
               text={msg.messageText} // Nội dung tin nhắn
               fileUrl={msg.fileUrl} // URL file
               onPin={() => handlePinMessage(msg.id)} // Xử lý ghim tin nhắn
               onDelete={() => handleDeleteMessage(msg.id)} // Xử lý xóa tin nhắn
+              isSentByCurrentUser={
+                msg.userResponse.email ===  currentUser.email
+              } // Điều chỉnh cho người gửi
             />
           ))}
         </div>
