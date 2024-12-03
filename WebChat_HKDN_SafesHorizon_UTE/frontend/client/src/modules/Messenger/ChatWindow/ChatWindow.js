@@ -16,6 +16,7 @@ const ChatWindow = ({ groupId }) => {
 
   const stompClientRef = useRef(null);
 
+  // Reconnect WebSocket in case of disconnection
   const reconnectWebSocket = () => {
     const socket = new SockJS(
       `http://localhost:8090/ws?token=${localStorage.getItem("token")}`
@@ -31,6 +32,7 @@ const ChatWindow = ({ groupId }) => {
 
         client.subscribe(`/topic/chat/${groupId}`, (messageOutput) => {
           const message = JSON.parse(messageOutput.body);
+          console.log(message);
           setMessages((prevMessages) => [...prevMessages, message]);
         });
       },
@@ -41,6 +43,7 @@ const ChatWindow = ({ groupId }) => {
     );
   };
 
+  // Fetch data from the server
   useEffect(() => {
     if (!groupId) return;
 
@@ -83,6 +86,7 @@ const ChatWindow = ({ groupId }) => {
       }
     };
 
+    // Set up WebSocket connection
     const setupWebSocket = () => {
       const socket = new SockJS(
         `http://localhost:8090/ws?token=${localStorage.getItem("token")}`
@@ -98,6 +102,7 @@ const ChatWindow = ({ groupId }) => {
 
           client.subscribe(`/topic/chat/${groupId}`, (messageOutput) => {
             const message = JSON.parse(messageOutput.body);
+            console.log(message);
             setMessages((prevMessages) => [...prevMessages, message]);
           });
         },
@@ -119,27 +124,28 @@ const ChatWindow = ({ groupId }) => {
     };
   }, [groupId]);
 
+  // Handle sending message
   const handleSendMessage = (messageText, imageBase64) => {
     if (!stompClientRef.current || !stompClientRef.current.connected) {
       alert("Không thể gửi tin nhắn. Kết nối WebSocket không thành công.");
       reconnectWebSocket();
       return;
     }
-  
+
     const messagePayload = {
       roomId: groupId,
       messageText: messageText,
       imageBase64: imageBase64 || "", // Gửi ảnh dưới dạng Base64 nếu có
     };
-  
+
     stompClientRef.current.send(
       `/app/chat/${groupId}`,
       {},
       JSON.stringify(messagePayload)
     );
   };
-  
 
+  // Handle adding a member
   const handleAddMember = async (email) => {
     try {
       const token = localStorage.getItem("token");
@@ -186,9 +192,8 @@ const ChatWindow = ({ groupId }) => {
   return (
     <div className="flex-1 flex bg-gray-100">
       <div
-        className={`flex-1 flex flex-col ${
-          showGroupInfo ? "w-2/3" : "w-full"
-        } transition-all duration-300`}
+        className={`flex-1 flex flex-col ${showGroupInfo ? "w-2/3" : "w-full"
+          } transition-all duration-300`}
       >
         <div className="flex items-center justify-between p-4 bg-white border-b">
           <div className="flex items-center space-x-3">
@@ -217,7 +222,9 @@ const ChatWindow = ({ groupId }) => {
 
         <div className="flex-1 p-4 overflow-y-auto">
           {messages.map((msg, index) => (
-            <Message key={index} sender={msg.sender} text={msg.text} />
+            <Message key={index} fileUrl={msg.fileUrl} image = {msg.userResponse.imagePath?msg.userResponse.imagePath:""}text={msg.
+              messageText
+              } />
           ))}
         </div>
 
