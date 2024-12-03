@@ -32,19 +32,17 @@ const Message = ({ image, text, onPin, onDelete, fileUrl }) => {
 
       {/* Menu chọn khi nhấn vào biểu tượng 3 dấu chấm */}
       {showOptions && (
-        <div className="absolute right-2 top-full mt-2 w-40 bg-white shadow-lg rounded-md border">
+        <div
+          className="absolute right-2 top-full mt-2 w-40 bg-white shadow-lg rounded-md border z-10"
+          style={{ minWidth: "160px" }}  // Điều chỉnh kích thước menu nếu cần thiết
+        >
           <ul>
+            {/* Thêm khoảng cách dưới mỗi mục để tránh việc chúng chồng lên nhau */}
             <li
               onClick={onPin}
               className="px-4 py-2 text-sm text-blue-500 cursor-pointer hover:bg-blue-100"
             >
               Pin Tin Nhắn
-            </li>
-            <li
-              onClick={onDelete}
-              className="px-4 py-2 text-sm text-red-500 cursor-pointer hover:bg-red-100"
-            >
-              Xóa Tin Nhắn
             </li>
             {fileUrl && (
               <li
@@ -54,6 +52,12 @@ const Message = ({ image, text, onPin, onDelete, fileUrl }) => {
                 Tải về
               </li>
             )}
+            <li
+              onClick={onDelete}
+              className="px-4 py-2 text-sm text-red-500 cursor-pointer hover:bg-red-100"
+            >
+              Xóa Tin Nhắn
+            </li>
           </ul>
         </div>
       )}

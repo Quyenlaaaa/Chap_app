@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FaVideo, FaInfoCircle, FaUserPlus, FaSignOutAlt } from "react-icons/fa";
+import {
+  FaVideo,
+  FaInfoCircle,
+  FaUserPlus,
+  FaSignOutAlt,
+} from "react-icons/fa";
 import Message from "./Message";
 import ChatInput from "./ChatInput";
 import SockJS from "sockjs-client";
@@ -33,7 +38,7 @@ const ChatWindow = ({ groupId }) => {
         client.subscribe(`/topic/chat/${groupId}`, (messageOutput) => {
           const message = JSON.parse(messageOutput.body);
           console.log(message);
-          setMessages((prevMessages) => [...prevMessages, message]);
+          // setMessages((prevMessages) => [...prevMessages, message]);
         });
       },
       (error) => {
@@ -145,6 +150,44 @@ const ChatWindow = ({ groupId }) => {
     );
   };
 
+  const fetchMessages = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Token không hợp lệ. Đăng nhập lại để tiếp tục.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:8090/api/messages/room/${groupId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Lỗi khi tải tin nhắn");
+      }
+
+      const data = await response.json();
+
+      if (data.code === 1000) {
+        setMessages(data.result || []);
+      } else {
+        alert(data.message || "Không thể tải tin nhắn");
+      }
+    } catch (error) {
+      console.error("Lỗi:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!groupId) return;
+    fetchMessages();
+  }, [groupId]);
+
   // Handle adding a member
   const handleAddMember = async (email) => {
     try {
@@ -175,6 +218,93 @@ const ChatWindow = ({ groupId }) => {
     }
   };
 
+  const handlePinMessage = async (messageId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://localhost:8090/api/messages/${messageId}/pin`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        alert("Tin nhắn đã được ghim.");
+      } else {
+        throw new Error("Ghim tin nhắn thất bại");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Đã xảy ra lỗi khi ghim tin nhắn");
+    }
+  };
+
+  // const handleDeleteMessage = async (messageId) => {
+  //   const confirmDelete = window.confirm("Bạn có chắc muốn xóa tin nhắn này?");
+  //   if (!confirmDelete) return;
+
+  //   // Loại bỏ tin nhắn khỏi UI ngay lập tức
+  //   setMessages((prevMessages) =>
+  //     prevMessages.filter((msg) => msg.id !== messageId)
+  //   );
+
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const response = await fetch(
+  //       `http://localhost:8090/api/messages/${messageId}`,
+  //       {
+  //         method: "DELETE",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error("Xóa tin nhắn thất bại");
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Đã xảy ra lỗi khi xóa tin nhắn. Vui lòng thử lại.");
+  //     // Phục hồi tin nhắn nếu lỗi
+  //     fetchMessages();
+  //   }
+  // };
+  const handleDeleteMessage = (messageId) => {
+    const confirmDelete = window.confirm("Bạn có chắc muốn xóa tin nhắn này?");
+    if (!confirmDelete) return;
+  
+    const token = localStorage.getItem("token");
+    console.log("Xóa tin nhắn với ID:", messageId); // Kiểm tra xem hàm có được gọi không
+  
+    // Gửi yêu cầu xóa tin nhắn
+    fetch(`http://localhost:8090/api/messages/${messageId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())  // Chuyển đổi phản hồi thành JSON
+      .then((data) => {
+        if (data.code === 1000) {
+          setMessages((prevMessages) =>
+            prevMessages.filter((msg) => msg.id !== messageId)
+          );
+        } else {
+          alert("Không thể xóa tin nhắn!");
+        }
+      })
+      .catch((error) => {
+        console.error("Lỗi khi kết nối đến server:", error);
+        alert("Đã xảy ra lỗi khi xóa tin nhắn. Vui lòng thử lại.");
+        // Có thể phục hồi tin nhắn nếu cần thiết
+      });
+  };
+  
+
   if (!groupId) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -192,8 +322,9 @@ const ChatWindow = ({ groupId }) => {
   return (
     <div className="flex-1 flex bg-gray-100">
       <div
-        className={`flex-1 flex flex-col ${showGroupInfo ? "w-2/3" : "w-full"
-          } transition-all duration-300`}
+        className={`flex-1 flex flex-col ${
+          showGroupInfo ? "w-2/3" : "w-full"
+        } transition-all duration-300`}
       >
         <div className="flex items-center justify-between p-4 bg-white border-b">
           <div className="flex items-center space-x-3">
@@ -222,9 +353,14 @@ const ChatWindow = ({ groupId }) => {
 
         <div className="flex-1 p-4 overflow-y-auto">
           {messages.map((msg, index) => (
-            <Message key={index} fileUrl={msg.fileUrl} image = {msg.userResponse.imagePath?msg.userResponse.imagePath:""}text={msg.
-              messageText
-              } />
+            <Message
+              key={msg.id} // Đảm bảo sử dụng ID tin nhắn thay vì index
+              image={msg.userResponse.imagePath} // Avatar của user gửi tin nhắn
+              text={msg.messageText} // Nội dung tin nhắn
+              fileUrl={msg.fileUrl} // URL file
+              onPin={() => handlePinMessage(msg.id)} // Xử lý ghim tin nhắn
+              onDelete={() => handleDeleteMessage(msg.id)} // Xử lý xóa tin nhắn
+            />
           ))}
         </div>
 

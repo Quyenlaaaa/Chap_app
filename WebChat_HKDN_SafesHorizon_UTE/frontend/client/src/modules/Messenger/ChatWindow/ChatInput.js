@@ -2,60 +2,62 @@ import React, { useState } from "react";
 
 const ChatInput = ({ onSendMessage }) => {
   const [messageText, setMessageText] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageBase64, setImageBase64] = useState(null);
 
-  const handleSend = () => {
-    if (messageText.trim() === "" && !selectedImage) return;
+  const handleInputChange = (e) => {
+    setMessageText(e.target.value);
+  };
 
-    if (selectedImage) {
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        const base64Data = reader.result;
-        if (base64Data && base64Data.startsWith("data:image")) {
-          onSendMessage(messageText, base64Data); // Gửi cả tin nhắn và ảnh
-        } else {
-          alert("Chỉ hỗ trợ gửi file ảnh.");
-        }
+        setImageBase64(reader.result); // Lưu Base64 của ảnh
       };
-      reader.readAsDataURL(selectedImage);
-    } else {
-      onSendMessage(messageText, null); // Chỉ gửi tin nhắn text
+      reader.readAsDataURL(file);
     }
+  };
 
-    setMessageText("");
-    setSelectedImage(null);
+  const handleSend = () => {
+    if (messageText.trim() || imageBase64) {
+      onSendMessage(messageText, imageBase64);
+      setMessageText("");
+      setImageBase64(null); // Xóa ảnh sau khi gửi
+    }
   };
 
   return (
-    <div className="flex items-center p-2 border-t">
+    <div className="flex items-center p-4 border-t bg-white">
       <input
         type="file"
         accept="image/*"
         className="hidden"
-        id="fileInput"
-        onChange={(e) => setSelectedImage(e.target.files[0])}
+        id="file-upload"
+        onChange={handleImageUpload}
       />
-      <button
-        className="p-2 bg-gray-200 rounded-md hover:bg-gray-300"
-        onClick={() => document.getElementById("fileInput").click()}
+      <label
+        htmlFor="file-upload"
+        className="p-2 text-blue-500 hover:bg-blue-100 rounded-full cursor-pointer"
       >
         📷
-      </button>
+      </label>
       <input
         type="text"
-        className="flex-1 p-2 border rounded-md mx-2"
+        className="flex-1 p-2 border rounded-md focus:outline-none"
         placeholder="Nhập tin nhắn..."
         value={messageText}
-        onChange={(e) => setMessageText(e.target.value)}
+        onChange={handleInputChange}
       />
       <button
-        className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
         onClick={handleSend}
+        className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
       >
         Gửi
       </button>
     </div>
   );
 };
+
 
 export default ChatInput;
