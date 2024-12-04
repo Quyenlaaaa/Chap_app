@@ -2,6 +2,8 @@ import { useState } from "react";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState("");
@@ -30,6 +32,7 @@ const ForgotPassword = () => {
 
             if (response.ok) {
                 setMessage("Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra email.");
+                toast.success('Email đặt lại mật khẩu đã được gửi');
                 setTimeout(() => {
                     navigate("/login");
                 }, 2000);

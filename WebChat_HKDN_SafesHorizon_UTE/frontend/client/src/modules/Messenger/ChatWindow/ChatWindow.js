@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import GroupInfo from "./GroupInfo";
 import {
   FaVideo,
   FaInfoCircle,
@@ -19,6 +23,9 @@ const ChatWindow = ({ groupId }) => {
   const [users, setUsers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
+const [newMemberEmail, setNewMemberEmail] = useState("");
+  
 
   const stompClientRef = useRef(null);
 
@@ -297,10 +304,10 @@ const ChatWindow = ({ groupId }) => {
   const handleDeleteMessage = (messageId) => {
     const confirmDelete = window.confirm("Bạn có chắc muốn xóa tin nhắn này?");
     if (!confirmDelete) return;
-
+  
     const token = localStorage.getItem("token");
     console.log("Xóa tin nhắn với ID:", messageId); // Kiểm tra xem hàm có được gọi không
-
+  
     // Gửi yêu cầu xóa tin nhắn
     fetch(`http://localhost:8090/api/messages/${messageId}`, {
       method: "DELETE",
@@ -314,17 +321,56 @@ const ChatWindow = ({ groupId }) => {
           setMessages((prevMessages) =>
             prevMessages.filter((msg) => msg.id !== messageId)
           );
+          toast.success("Tin nhắn đã được xóa thành công!"); // Thông báo thành công
         } else {
-          alert("Không thể xóa tin nhắn!");
+          toast.error("Không thể xóa tin nhắn!"); // Thông báo lỗi
         }
       })
       .catch((error) => {
         console.error("Lỗi khi kết nối đến server:", error);
-        alert("Đã xảy ra lỗi khi xóa tin nhắn. Vui lòng thử lại.");
-        // Có thể phục hồi tin nhắn nếu cần thiết
+        toast.error("Đã xảy ra lỗi khi xóa tin nhắn. Vui lòng thử lại."); // Thông báo lỗi khi có lỗi kết nối
       });
   };
+  
 
+  const fetchGroupInfo = async (groupId) => {
+    try {
+      const token = localStorage.getItem("token"); // Hoặc cách lấy token bạn đang sử dụng
+      const response = await fetch(`http://localhost:8090/api/rooms/${groupId}/users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json(); // Parse JSON từ response
+      if (data.code === 1000) { // Kiểm tra mã phản hồi thành công
+        const members = data.result;
+        setUsers(members);
+        setMemberCount(members.length);
+      } else {
+        console.error("Lỗi khi lấy danh sách thành viên:", data.message);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gọi API:", error);
+    }
+  };
+  
+  const closeGroupInfo = () => {
+    setShowGroupInfo(false);
+  };
+  useEffect(() => {
+    fetchGroupInfo();
+  }, [groupId]);
+
+  
+
+  
   if (!groupId) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -392,40 +438,14 @@ const ChatWindow = ({ groupId }) => {
       </div>
 
       {showGroupInfo && (
-        <div className="w-1/3 bg-white p-4 border-l">
-          <h4 className="text-lg font-semibold mb-4">Thông tin nhóm</h4>
-          <p className="text-sm text-gray-500">{memberCount} thành viên</p>
-          <ul className="mt-4 space-y-2">
-            {users.map((user, index) => (
-              <li key={index} className="flex items-center space-x-3">
-                <img
-                  src={`https://i.pravatar.cc/150?img=${index}`}
-                  alt={user.email}
-                  className="w-8 h-8 rounded-full"
-                />
-                <p className="text-sm text-gray-700">{user.email}</p>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4">
-            <input
-              type="email"
-              placeholder="Nhập email để thêm"
-              className="border p-2 w-full mb-2"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleAddMember(e.target.value);
-                  e.target.value = "";
-                }
-              }}
-            />
-            <button className="w-full bg-blue-500 text-white py-2 rounded-md">
-              <FaUserPlus className="inline-block mr-2" />
-              Thêm thành viên
-            </button>
-          </div>
-        </div>
-      )}
+  <GroupInfo
+    showGroupInfo={showGroupInfo}
+    memberCount={users.length}  // Số thành viên có thể được lấy từ state trong GroupInfo.js
+    users={users}               // Danh sách người dùng cũng có thể lấy từ state trong GroupInfo.js
+    groupId={groupId}           // ID nhóm sẽ được truyền vào như cũ
+    onClose={closeGroupInfo}    // Hàm đóng GroupInfo sẽ được truyền vào
+  />
+)}
     </div>
   );
 };

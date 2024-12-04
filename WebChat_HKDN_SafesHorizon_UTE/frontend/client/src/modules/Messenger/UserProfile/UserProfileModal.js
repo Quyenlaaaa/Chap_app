@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const UserProfileModal = ({ isOpen, onClose, user }) => {
   const [name, setName] = useState(user?.name || "Nguyễn Văn A");
@@ -24,42 +26,44 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
 
   if (!isOpen) return null;
 
-  const handleUpdateProfile = async () => {
-    if (newPassword && newPassword !== confirmPassword) {
-      alert("Mật khẩu mới không khớp!");
-      return;
+ 
+const handleUpdateProfile = async () => { 
+  if (newPassword && newPassword !== confirmPassword) {
+    toast.error("Mật khẩu mới không khớp!"); // Thông báo lỗi khi mật khẩu không khớp
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("name", name || "");
+  formData.append("oldPassword", currentPassword || "");
+  formData.append("newPassword", newPassword || "");
+  if (image) {
+    formData.append("image", image);
+  }
+
+  try {
+    const response = await fetch("http://localhost:8090/api/users/profile", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Đã xảy ra lỗi khi cập nhật!");
     }
 
-    const formData = new FormData();
-    formData.append("name", name || "");
-    formData.append("oldPassword", currentPassword || "");
-    formData.append("newPassword", newPassword || "");
-    if (image) {
-      formData.append("image", image);
-    }
+    const result = await response.json();
+    toast.success(result.message || "Cập nhật thành công!"); // Thông báo thành công
+    onClose();
+  } catch (error) {
+    console.error(error);
+    toast.error(error.message || "Đã xảy ra lỗi khi cập nhật!"); // Thông báo lỗi khi có sự cố
+  }
+};
 
-    try {
-      const response = await fetch("http://localhost:8090/api/users/profile", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Đã xảy ra lỗi khi cập nhật!");
-      }
-
-      const result = await response.json();
-      alert(result.message || "Cập nhật thành công!");
-      onClose();
-    } catch (error) {
-      console.error(error);
-      alert(error.message);
-    }
-  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
