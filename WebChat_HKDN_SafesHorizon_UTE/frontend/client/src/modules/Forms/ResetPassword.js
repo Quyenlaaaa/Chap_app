@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ResetPassword = () => {
     const [token, setToken] = useState("");
@@ -18,7 +20,8 @@ const ResetPassword = () => {
         if (tokenFromUrl) {
             setToken(tokenFromUrl);
         } else {
-            setError("Không tìm thấy token trong URL.");
+            // setError("Không tìm thấy token trong URL.");
+            toast.error('Không tìm thấy token trong URL.');
         }
     }, []);
 
@@ -50,6 +53,7 @@ const ResetPassword = () => {
 
             if (response.ok) {
                 setSuccessMessage("Mật khẩu đã được thay đổi thành công.");
+                toast.success('Thay đổi mật khẩu thành công');
                 setTimeout(() => {
                     navigate("/login");
                 }, 2000);

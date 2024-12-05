@@ -1,32 +1,100 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const UserProfileModal = ({ isOpen, onClose }) => {
-  const [name, setName] = useState('Nguyễn Văn A');
-  const [email, setEmail] = useState('email@example.com');
+const UserProfileModal = ({ isOpen, onClose, user }) => {
+  const [name, setName] = useState(user?.name || "Nguyễn Văn A");
+  const [email, setEmail] = useState(user?.email || "email@example.com");
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [image, setImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(user?.imagePath ? `http://localhost:8090/profile/${user.imagePath}` : "");
+
+  // Điều chỉnh khi modal đóng
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      setPreviewImage(user.imagePath ? `http://localhost:8090/profile/${user.imagePath}` : "");
+    }
+  }, [user]);
 
   if (!isOpen) return null;
+
+ 
+const handleUpdateProfile = async () => { 
+  if (newPassword && newPassword !== confirmPassword) {
+    toast.error("Mật khẩu mới không khớp!"); // Thông báo lỗi khi mật khẩu không khớp
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("name", name || "");
+  formData.append("oldPassword", currentPassword || "");
+  formData.append("newPassword", newPassword || "");
+  if (image) {
+    formData.append("image", image);
+  }
+
+  try {
+    const response = await fetch("http://localhost:8090/api/users/profile", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Đã xảy ra lỗi khi cập nhật!");
+    }
+
+    const result = await response.json();
+    toast.success(result.message || "Cập nhật thành công!"); // Thông báo thành công
+    onClose();
+  } catch (error) {
+    console.error(error);
+    toast.error(error.message || "Đã xảy ra lỗi khi cập nhật!"); // Thông báo lỗi khi có sự cố
+  }
+};
+
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white p-8 rounded-lg w-full max-w-md shadow-lg">
-        <h2 className="text-2xl font-semibold mb-6 text-center text-black">Cập nhật thông tin cá nhân</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-center text-black">
+          Cập nhật thông tin cá nhân
+        </h2>
 
         {/* Phần Thay đổi ảnh đại diện */}
         <div className="flex items-center justify-center mb-6 relative">
           <img
-            src="https://i.pravatar.cc/150?img=10"
+            src={previewImage || "https://i.pravatar.cc/150?img=10"}
             alt="Avatar"
             className="w-24 h-24 rounded-full border border-gray-300"
           />
           <div className="absolute bottom-0 right-0 bg-gray-300 p-1 rounded-full cursor-pointer hover:bg-gray-400">
-            <input type="file" accept="image/*" className="hidden" id="avatar-upload" />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id="avatar-upload"
+              onChange={handleImageChange}
+            />
             <label htmlFor="avatar-upload">
               <img
                 src="https://img.icons8.com/ios-glyphs/30/000000/camera--v1.png"
@@ -38,30 +106,36 @@ const UserProfileModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Họ và tên */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-black mb-1">Họ và tên</label>
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-black mb-1">
+            Họ và tên
+          </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            className="mt-1 p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           />
         </div>
 
         {/* Email */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-black mb-1">Email</label>
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-black mb-1">
+            Email
+          </label>
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            disabled
+            className="mt-1 p-2 border border-gray-300 rounded-lg w-full bg-gray-100 text-black"
           />
         </div>
 
         {/* Mật khẩu */}
-        <div className="mb-4 flex items-center">
-          <label className="block text-sm font-medium text-black mb-1 flex-grow">Mật khẩu</label>
+        <div className="mb-2 flex items-center">
+          <label className="block text-sm font-medium text-black mb-1 flex-grow">
+            
+          </label>
           <button
             className="ml-4 bg-gray-200 text-blue-500 px-3 py-1 rounded hover:bg-gray-300"
             onClick={() => setShowChangePassword(!showChangePassword)}
@@ -70,85 +144,81 @@ const UserProfileModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Form đổi mật khẩu (ẩn/hiện dựa trên trạng thái showChangePassword) */}
         {showChangePassword && (
-          <div className="space-y-4">
-            {/* Mật khẩu hiện tại */}
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">Mật khẩu hiện tại</label>
+          <>
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-black mb-1">Mật khẩu cũ</label>
               <div className="relative">
                 <input
-                  type={showCurrentPassword ? 'text' : 'password'}
+                  type={showCurrentPassword ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                  className="mt-1 p-2 border border-gray-300 rounded-lg w-full text-black"
                 />
                 <button
                   type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-gray-500"
                 >
-                  {showCurrentPassword ? '👁️' : '👁️‍🗨️'}
+                  {showCurrentPassword ? '👁️' : '👁️‍🗨️'} {/* Biểu tượng mắt */}
                 </button>
               </div>
             </div>
 
-            {/* Mật khẩu mới */}
-            <div>
+            <div className="mb-2">
               <label className="block text-sm font-medium text-black mb-1">Mật khẩu mới</label>
               <div className="relative">
                 <input
-                  type={showNewPassword ? 'text' : 'password'}
+                  type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                  className="mt-1 p-2 border border-gray-300 rounded-lg w-full text-black"
                 />
                 <button
                   type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-gray-500"
                 >
-                  {showNewPassword ? '👁️' : '👁️‍🗨️'}
+                  {showNewPassword ? '👁️' : '👁️‍🗨️'} {/* Biểu tượng mắt */}
                 </button>
               </div>
             </div>
 
-            {/* Nhập lại mật khẩu mới */}
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">Nhập lại mật khẩu mới</label>
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-black mb-1">Xác nhận mật khẩu mới</label>
               <div className="relative">
                 <input
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                  className="mt-1 p-2 border border-gray-300 rounded-lg w-full text-black"
                 />
                 <button
                   type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-gray-500"
                 >
-                  {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                  {showConfirmPassword ? '👁️' : '👁️‍🗨️'} {/* Biểu tượng mắt */}
                 </button>
               </div>
             </div>
-          </div>
+          </>
         )}
 
-        {/* Button cập nhật thông tin */}
-        <button
-          className="mt-6 w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-semibold"
-        >
-          Cập nhật thông tin
-        </button>
-
-        {/* Button đóng */}
-        <button
-          onClick={onClose}
-          className="mt-4 w-full bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold"
-        >
-          Đóng
-        </button>
+        <div className="flex justify-between mt-6">
+          <button
+            className="bg-gray-500 text-white px-4 py-2 rounded"
+            onClick={onClose}
+          >
+            Đóng
+          </button>
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={handleUpdateProfile}
+          >
+            Cập nhật
+          </button>
+        </div>
       </div>
     </div>
   );

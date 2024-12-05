@@ -6,7 +6,7 @@ const FriendItem = ({ name, avatar }) => {
       {/* Avatar */}
       <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-gray-300 mr-3">
         <img
-          src={avatar || 'https://i.pravatar.cc/150'} // Avatar mặc định nếu không có avatar truyền vào
+          src={avatar || 'https://i.pravatar.cc/150'} 
           alt={name}
           className="w-full h-full object-cover"
         />

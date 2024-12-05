@@ -1,7 +1,7 @@
 import './App.css';
-// import Sidebar from './modules/Messenger/Sidebar/Sidebar';
+import SidebarMsg from './modules/Messenger/SidebarMsg/SidebarMsg';
 import ChatWindow from './modules/Messenger/ChatWindow/ChatWindow';
-import SidebarMenu from './modules/Messenger/Sidebar/SidebarMenu';
+import SidebarMenu from './modules/Messenger/SidebarMsg/SidebarMenu';
 import Form from './modules/Forms/Login'; 
 import ForgotPassword from './modules/Forms/ForgotPassword';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ import Sidebar from "./components/sidebar/Sidebar";
 import Topbar from "./components/topbar/Topbar";
 import Home from "./pages/home/Home";
 import ChangePassword from "./pages/password/ChangePassword";
+import Chat from './pages/chat/Chat';
 
 
 function App() {
@@ -42,15 +43,18 @@ function App() {
             </div>
           </>
         } />
-
         {/* <Route path="client/" element={<Navigate to="/login" replace />} /> */}
-        <Route path="client/home" element={
+        {/* <Route path="client/home" element={
+          <div className="flex h-screen">
           <div className="flex h-full w-full">
             <SidebarMenu className="h-full" />
-            {/* <Sidebar className="h-full" /> */}
+            <SidebarMsg className="h-full" />
             <ChatWindow className="h-full" />
+            </div>
           </div>
-        } />
+        } /> */}
+        <Route path="client/home" element={<Chat />} />
+        <Route path="client/room/:groupId" element={<Chat />} /> 
         {/* <Route path="client/login" element={<Form isSignInPage={true} />} /> */}
         <Route path="/signup" element={<Form isSignInPage={false} />} />
         <Route path="/forgot_password" element={<ForgotPassword />} />

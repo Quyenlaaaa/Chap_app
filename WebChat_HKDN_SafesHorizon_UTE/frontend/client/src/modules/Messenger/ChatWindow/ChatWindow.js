@@ -1,66 +1,415 @@
-import React, { useState } from 'react';
-import Message from './Message';
-import ChatInput from './ChatInput';
-import { FaVideo, FaInfoCircle, FaThumbtack, FaPaperclip, FaSmile, FaEllipsisH, FaSignOutAlt } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const ChatWindow = () => {
-  const [messages, setMessages] = useState([
-    { sender: 'friend', text: 'Chào bạn!', avatar: 'https://i.pravatar.cc/150?img=3', name: 'Nguyễn Văn A' },
-    // { sender: 'user', text: 'Chào, bạn khỏe không?', avatar: 'https://i.pravatar.cc/150?img=5', name: 'Tôi' },
-    // { sender: 'friend', text: 'Mình ổn, còn bạn?', avatar: 'https://i.pravatar.cc/150?img=3', name: 'Nguyễn Văn A' },
-  ]);
-  const [pinnedMessages, setPinnedMessages] = useState([]);
-  const [attachedFile, setAttachedFile] = useState(null);
+import GroupInfo from "./GroupInfo";
+import {
+  FaVideo,
+  FaInfoCircle,
+  FaUserPlus,
+  FaSignOutAlt,
+} from "react-icons/fa";
+import Message from "./Message";
+import ChatInput from "./ChatInput";
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
+
+const ChatWindow = ({ groupId }) => {
+  const [messages, setMessages] = useState([]);
+  const [groupName, setGroupName] = useState("");
+  const [loading, setLoading] = useState(true);
   const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
+  const [users, setUsers] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
+const [newMemberEmail, setNewMemberEmail] = useState("");
+  
 
-  const handleSendMessage = (message) => {
-    // setMessages([...messages, { sender: 'user', text: message, avatar: 'https://i.pravatar.cc/150?img=5', name: 'Tôi', file: attachedFile }]);
-    // setAttachedFile(null);
-  };
+  const stompClientRef = useRef(null);
 
-  const handlePinMessage = (message) => {
-    setPinnedMessages((prevPinnedMessages) => {
-      const isPinned = prevPinnedMessages.some(msg => msg.text === message.text);
-      if (isPinned) {
-        return prevPinnedMessages.filter(msg => msg.text !== message.text);
-      } else {
-        return [...prevPinnedMessages, message];
+  // Reconnect WebSocket in case of disconnection
+  const reconnectWebSocket = () => {
+    const socket = new SockJS(
+      `http://localhost:8090/ws?token=${localStorage.getItem("token")}`
+    );
+    const client = Stomp.over(socket);
+
+    client.connect(
+      {},
+      () => {
+        console.log("WebSocket đã kết nối lại");
+        setIsConnected(true);
+        stompClientRef.current = client;
+
+        client.subscribe(`/topic/chat/${groupId}`, (messageOutput) => {
+          const message = JSON.parse(messageOutput.body);
+          console.log(message);
+          // setMessages((prevMessages) => [...prevMessages, message]);
+        });
+      },
+      (error) => {
+        console.error("Không thể kết nối lại WebSocket", error);
+        setTimeout(reconnectWebSocket, 5000);
       }
-    });
+    );
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAttachedFile(file);
+  // Fetch current user data
+  const fetchCurrentUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Token không hợp lệ. Đăng nhập lại để tiếp tục.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8090/api/users/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Lỗi khi tải thông tin người dùng");
+      }
+
+      const data = await response.json();
+      setCurrentUser(data.result); // Set current user data
+    } catch (error) {
+      console.error("Lỗi:", error);
     }
   };
 
-  const handleLeaveGroup = () => {
-    alert('Bạn đã rời nhóm!');
+  // Fetch data from the server
+  useEffect(() => {
+    if (!groupId) return;
+
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("Token không hợp lệ. Đăng nhập lại để tiếp tục.");
+          return;
+        }
+
+        const [groupResponse, usersResponse] = await Promise.all([
+          fetch(`http://localhost:8090/api/rooms/${groupId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch(`http://localhost:8090/api/rooms/${groupId}/users`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
+
+        if (!groupResponse.ok || !usersResponse.ok) {
+          throw new Error("Lỗi khi tải dữ liệu nhóm hoặc danh sách người dùng");
+        }
+
+        const groupData = await groupResponse.json();
+        const usersData = await usersResponse.json();
+
+        setGroupName(groupData.result.name);
+        setMessages(groupData.result.messages || []);
+        setMemberCount(usersData.result.length || 0);
+        setUsers(usersData.result || []);
+      } catch (error) {
+        console.error("Lỗi:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Set up WebSocket connection
+    const setupWebSocket = () => {
+      const socket = new SockJS(
+        `http://localhost:8090/ws?token=${localStorage.getItem("token")}`
+      );
+      const client = Stomp.over(socket);
+
+      client.connect(
+        {},
+        () => {
+          console.log("WebSocket đã kết nối");
+          setIsConnected(true);
+          stompClientRef.current = client;
+
+          client.subscribe(`/topic/chat/${groupId}`, (messageOutput) => {
+            const message = JSON.parse(messageOutput.body);
+            console.log(message);
+            setMessages((prevMessages) => [...prevMessages, message]);
+          });
+        },
+        (error) => {
+          console.error("Không thể kết nối WebSocket", error);
+          alert("Không thể kết nối WebSocket. Kiểm tra lại server hoặc token.");
+        }
+      );
+    };
+
+    fetchData();
+    setupWebSocket();
+    fetchCurrentUser(); // Fetch current user data
+
+    return () => {
+      if (stompClientRef.current) {
+        stompClientRef.current.disconnect();
+        console.log("WebSocket đã ngắt kết nối");
+      }
+    };
+  }, [groupId]);
+
+  // Handle sending message
+  const handleSendMessage = (messageText, file) => {
+    if (!stompClientRef.current || !stompClientRef.current.connected) {
+      alert("Không thể gửi tin nhắn. Kết nối WebSocket không thành công.");
+      reconnectWebSocket();
+      return;
+    }
+  
+    // Nếu có file, chuyển đổi file sang Base64
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Data = reader.result; // Chỉ lấy dữ liệu Base64
+        const messagePayload = {
+          roomId: groupId,
+          messageText: messageText,
+          imageBase64: base64Data, // Gửi file dưới dạng Base64
+        };
+  
+        // Gửi tin nhắn qua WebSocket
+        stompClientRef.current.send(
+          `/app/chat/${groupId}`,
+          {},
+          JSON.stringify(messagePayload)
+        );
+      };
+  
+      reader.readAsDataURL(file); // Đọc file và chuyển sang Base64
+    } else {
+      // Nếu không có file, chỉ gửi tin nhắn
+      const messagePayload = {
+        roomId: groupId,
+        messageText: messageText,
+        imageBase64: "", // Không có file
+      };
+  
+      stompClientRef.current.send(
+        `/app/chat/${groupId}`,
+        {},
+        JSON.stringify(messagePayload)
+      );
+    }
   };
 
+  
+  const fetchMessages = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Token không hợp lệ. Đăng nhập lại để tiếp tục.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:8090/api/messages/room/${groupId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Lỗi khi tải tin nhắn");
+      }
+
+      const data = await response.json();
+
+      if (data.code === 1000) {
+        setMessages(data.result || []);
+      } else {
+        alert(data.message || "Không thể tải tin nhắn");
+      }
+    } catch (error) {
+      console.error("Lỗi:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!groupId) return;
+    fetchMessages();
+  }, [groupId]);
+
+  // Handle adding a member
+  const handleAddMember = async (email) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://localhost:8090/api/rooms/${groupId}/add-member`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Thêm thành viên thất bại");
+      }
+
+      const data = await response.json();
+      setUsers((prevUsers) => [...prevUsers, data.result]);
+      setMemberCount((prevCount) => prevCount + 1);
+      alert("Thêm thành viên thành công");
+    } catch (error) {
+      console.error(error);
+      alert("Lỗi khi thêm thành viên");
+    }
+  };
+
+  const handlePinMessage = async (messageId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://localhost:8090/api/messages/${messageId}/pin`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        alert("Tin nhắn đã được ghim.");
+      } else {
+        throw new Error("Ghim tin nhắn thất bại");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Đã xảy ra lỗi khi ghim tin nhắn");
+    }
+  };
+
+  const handleDeleteMessage = (messageId) => {
+    const confirmDelete = window.confirm("Bạn có chắc muốn xóa tin nhắn này?");
+    if (!confirmDelete) return;
+  
+    const token = localStorage.getItem("token");
+    console.log("Xóa tin nhắn với ID:", messageId); // Kiểm tra xem hàm có được gọi không
+  
+    // Gửi yêu cầu xóa tin nhắn
+    fetch(`http://localhost:8090/api/messages/${messageId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json()) // Chuyển đổi phản hồi thành JSON
+      .then((data) => {
+        if (data.code === 1000) {
+          setMessages((prevMessages) =>
+            prevMessages.filter((msg) => msg.id !== messageId)
+          );
+          toast.success("Tin nhắn đã được xóa thành công!"); // Thông báo thành công
+        } else {
+          toast.error("Không thể xóa tin nhắn!"); // Thông báo lỗi
+        }
+      })
+      .catch((error) => {
+        console.error("Lỗi khi kết nối đến server:", error);
+        toast.error("Đã xảy ra lỗi khi xóa tin nhắn. Vui lòng thử lại."); // Thông báo lỗi khi có lỗi kết nối
+      });
+  };
+  
+
+  const fetchGroupInfo = async (groupId) => {
+    try {
+      const token = localStorage.getItem("token"); // Hoặc cách lấy token bạn đang sử dụng
+      const response = await fetch(`http://localhost:8090/api/rooms/${groupId}/users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json(); // Parse JSON từ response
+      if (data.code === 1000) { // Kiểm tra mã phản hồi thành công
+        const members = data.result;
+        setUsers(members);
+        setMemberCount(members.length);
+      } else {
+        console.error("Lỗi khi lấy danh sách thành viên:", data.message);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gọi API:", error);
+    }
+  };
+  
+  const closeGroupInfo = () => {
+    setShowGroupInfo(false);
+  };
+  useEffect(() => {
+    fetchGroupInfo();
+  }, [groupId]);
+
+  
+
+  
+  if (!groupId) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        Chọn nhóm để bắt đầu chat
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">Đang tải...</div>
+    );
+  }
+
   return (
-    <div className="flex-1 p-4 flex bg-gray-100 border-l border-gray-300">
-      {/* Khung chat */}
-      <div className={`flex-1 flex flex-col ${showGroupInfo ? 'w-2/3' : 'w-full'} transition-all duration-300`}>
-        <div className="flex items-center justify-between mb-4 border-b pb-2">
+    <div className="flex-1 flex bg-gray-100">
+      <div
+        className={`flex-1 flex flex-col ${
+          showGroupInfo ? "w-2/3" : "w-full"
+        } transition-all duration-300`}
+      >
+        <div className="flex items-center justify-between p-4 bg-white border-b">
           <div className="flex items-center space-x-3">
-            <img src="https://i.pravatar.cc/150?img=2" alt="Group Avatar" className="w-10 h-10 rounded-full" />
+            <img
+              src="https://i.pravatar.cc/150?img=2"
+              alt="Group Avatar"
+              className="w-10 h-10 rounded-full"
+            />
             <div>
-              <h3 className="text-lg font-semibold text-black">Học Kỳ Doanh Nghiệp</h3>
-              <p className="text-sm text-gray-500">3 thành viên</p>
+              <h3 className="text-lg font-semibold text-black">{groupName}</h3>
+              <p className="text-sm text-gray-500">{memberCount} thành viên</p>
             </div>
           </div>
           <div className="flex space-x-2">
-            <button
-              className="text-blue-500 hover:bg-blue-100 p-2 rounded-full transition duration-200"
-              onClick={() => alert('Bắt đầu cuộc gọi video')}
-            >
+            <button className="p-2 text-blue-500 hover:bg-blue-100 rounded-full">
               <FaVideo size={20} />
             </button>
             <button
-              className="text-blue-500 hover:bg-blue-100 p-2 rounded-full transition duration-200"
+              className="p-2 text-blue-500 hover:bg-blue-100 rounded-full"
               onClick={() => setShowGroupInfo(!showGroupInfo)}
             >
               <FaInfoCircle size={20} />
@@ -68,130 +417,35 @@ const ChatWindow = () => {
           </div>
         </div>
 
-        {pinnedMessages.length > 0 && (
-          <div className="p-2 bg-yellow-100 border-l-4 border-yellow-500 mb-4 flex flex-col space-y-2">
-            <p className="text-sm text-gray-700 font-semibold">Tin nhắn đã ghim:</p>
-            {pinnedMessages.map((msg, index) => (
-              <div key={index} className="flex justify-between items-center">
-                <p>{msg.text}</p>
-                <button
-                  className="text-gray-500 hover:text-red-500 transition duration-200"
-                  onClick={() => handlePinMessage(msg)}
-                >
-                  Bỏ ghim
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto space-y-4 mt-4">
-          {messages.map((msg, index) => (
-            <div key={index} className={`flex items-center group ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <Message sender={msg.sender} text={msg.text} avatar={msg.avatar} name={msg.name} />
-              {msg.file && (
-                <div className="text-sm text-blue-500">
-                  <a href={URL.createObjectURL(msg.file)} target="_blank" rel="noopener noreferrer">
-                    Tệp đính kèm: {msg.file.name}
-                  </a>
-                </div>
-              )}
-              <button
-                className="ml-2 text-gray-500 opacity-0 group-hover:opacity-100 hover:text-yellow-500 transition duration-200"
-                onClick={() => handlePinMessage(msg)}
-              >
-                <FaThumbtack size={16} />
-              </button>
-            </div>
+        <div className="flex-1 p-4 overflow-y-auto">
+          {messages.map((msg) => (
+            <Message
+              key={msg.id} // Đảm bảo sử dụng ID tin nhắn thay vì index
+              image={msg.userResponse.imagePath} // Avatar của user gửi tin nhắn
+              userName={msg.userResponse.name} // Tên người gửi
+              text={msg.messageText} // Nội dung tin nhắn
+              fileUrl={msg.fileUrl} // URL file
+              onPin={() => handlePinMessage(msg.id)} // Xử lý ghim tin nhắn
+              onDelete={() => handleDeleteMessage(msg.id)} // Xử lý xóa tin nhắn
+              isSentByCurrentUser={
+                msg.userResponse.email ===  currentUser.email
+              } // Điều chỉnh cho người gửi
+            />
           ))}
         </div>
 
-        {/* Khung nhập tin nhắn luôn ở dưới cùng */}
-        <div className="flex flex-col space-y-1 p-2 bg-white border border-gray-300 rounded-lg mt-auto">
-          <div className="flex space-x-2 mt-1">
-            <button className="text-blue-500 hover:bg-blue-100 p-1 rounded-full transition duration-200 cursor-pointer">
-              <label htmlFor="fileInput" className="cursor-pointer">
-                <FaPaperclip size={18} />
-              </label>
-              <input
-                id="fileInput"
-                type="file"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </button>
-            <button className="text-blue-500 hover:bg-blue-100 p-1 rounded-full transition duration-200">
-              <FaSmile size={18} />
-            </button>
-            <button className="text-gray-500 hover:bg-gray-100 p-1 rounded-full transition duration-200">
-              <FaEllipsisH size={18} />
-            </button>
-          </div>
-          <ChatInput onSendMessage={handleSendMessage} />
-        </div>
+        <ChatInput onSendMessage={handleSendMessage} />
       </div>
 
-      {/* Khung thông tin nhóm */}
       {showGroupInfo && (
-        <div className="w-1/3 h-full p-4 bg-white border-l border-gray-300 shadow-lg overflow-y-auto transition-all duration-300 flex flex-col">
-          {/* Tiêu đề thông tin nhóm và Avatar nhóm */}
-          <div className="flex flex-col items-center mb-6">
-            <h3 className="text-lg font-semibold text-center mb-4">Thông tin nhóm</h3>
-            <div className="w-16 h-16 rounded-full overflow-hidden mb-4">
-              <img src="https://i.pravatar.cc/150?img=2" alt="Group Avatar" className="w-full h-full object-cover" />
-            </div>
-            <h4 className="text-center text-md font-semibold mb-4">Thảo luận công việc</h4>
-          </div>
-
-          {/* Thông tin nhóm */}
-          <div className="space-y-4 w-full">
-            <div>
-              <h4 className="font-semibold">Thành viên nhóm</h4>
-              <p className="text-sm">3 thành viên</p>
-            </div>
-
-            {/* Phần Ảnh/Video */}
-            <div>
-              <h4 className="font-semibold">Ảnh/Video</h4>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="h-16 w-16 bg-gray-200 rounded-lg shadow-sm"></div>
-                <div className="h-16 w-16 bg-gray-200 rounded-lg shadow-sm"></div>
-                <div className="h-16 w-16 bg-gray-200 rounded-lg shadow-sm"></div>
-              </div>
-            </div>
-
-            {/* Phần File đã gửi */}
-            <div>
-              <h4 className="font-semibold">File đã gửi</h4>
-              <div className="space-y-2">
-                {/* Lặp qua các file đã gửi và hiển thị chúng */}
-                <div className="text-sm text-blue-500">
-                  <a href="/path/to/file1.pdf" target="_blank" rel="noopener noreferrer">
-                    file1.pdf
-                  </a>
-                </div>
-                <div className="text-sm text-blue-500">
-                  <a href="/path/to/file2.jpg" target="_blank" rel="noopener noreferrer">
-                    file2.jpg
-                  </a>
-                </div>
-                {/* Bạn có thể lặp qua mảng các file thực tế ở đây */}
-              </div>
-            </div>
-          </div>
-
-          {/* Nút "Rời khỏi nhóm" */}
-          <div className="mt-4">
-            <button
-              onClick={handleLeaveGroup}
-              className="text-red-600 hover:text-white hover:bg-red-600 py-2 rounded-lg flex items-center justify-center space-x-2 w-full border border-red-600"
-            >
-              <FaSignOutAlt size={18} />
-              <span>Rời khỏi nhóm</span>
-            </button>
-          </div>
-        </div>
-      )}
+  <GroupInfo
+    showGroupInfo={showGroupInfo}
+    memberCount={users.length}  // Số thành viên có thể được lấy từ state trong GroupInfo.js
+    users={users}               // Danh sách người dùng cũng có thể lấy từ state trong GroupInfo.js
+    groupId={groupId}           // ID nhóm sẽ được truyền vào như cũ
+    onClose={closeGroupInfo}    // Hàm đóng GroupInfo sẽ được truyền vào
+  />
+)}
     </div>
   );
 };
