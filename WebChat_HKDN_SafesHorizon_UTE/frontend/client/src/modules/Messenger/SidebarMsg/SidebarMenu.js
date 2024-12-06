@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FaCog, FaSignOutAlt } from 'react-icons/fa';
 import UserProfileModal from '../UserProfile/UserProfileModal';
+import { useNavigate } from "react-router-dom";
 
 const SidebarMenu = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [user, setUser] = useState(null); // Lưu thông tin người dùng
-  const [userAvatar, setUserAvatar] = useState(''); // Lưu ảnh đại diện người dùng
+  const [user, setUser] = useState(null); 
+  const [userAvatar, setUserAvatar] = useState(''); 
+  const navigate = useNavigate();
 
   // Lấy thông tin người dùng
   useEffect(() => {
@@ -44,7 +46,42 @@ const SidebarMenu = () => {
     setIsModalOpen(false);
   };
 
-  if (!user) return <div>Loading...</div>; // Chờ lấy thông tin người dùng
+  const handleLogout = async () => {
+    const token = localStorage.getItem("token"); // Lấy token từ localStorage
+  
+    if (!token) {
+      alert("Bạn chưa đăng nhập!");
+      return;
+    }
+  
+    try {
+      const response = await fetch("http://localhost:8090/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }), // Truyền token trong body
+      });
+  
+      if (response.ok) {
+        // Xóa token khỏi localStorage
+        localStorage.removeItem("token");
+  
+        // Điều hướng người dùng về trang login
+        navigate("/login");
+        alert("Đăng xuất thành công!");
+      } else {
+        const error = await response.json();
+        alert(`Lỗi đăng xuất: ${error.message || "Không thể đăng xuất"}`);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gọi API đăng xuất:", error);
+      alert("Đã xảy ra lỗi trong khi đăng xuất!");
+    }
+  };
+
+  
+  if (!user) return <div>Loading...</div>; 
 
   return (
     <div className="w-16 bg-black text-white flex flex-col items-center py-4 space-y-6">
@@ -68,7 +105,7 @@ const SidebarMenu = () => {
         {/* Icon Đăng xuất */}
         <button
           className="hover:bg-blue-600 p-2 rounded-lg transition duration-200 ease-in-out"
-          onClick={() => console.log('Đăng xuất')}
+          onClick={handleLogout}
         >
           <FaSignOutAlt size={24} />
         </button>

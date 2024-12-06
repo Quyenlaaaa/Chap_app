@@ -21,6 +21,14 @@ const ChatWindow = ({ groupId }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [roomLink, setRoomLink] = useState("");
+   // Hàm tạo phòng họp
+   const createMeeting = () => {
+    const roomId = `group-chat-room-${Date.now()}`;
+    const link = `https://meet.jit.si/${roomId}`;
+    setRoomLink(link);
+    console.log("Meeting link:", link); // Debug
+  };
 
   const stompClientRef = useRef(null);
 
@@ -414,7 +422,9 @@ const ChatWindow = ({ groupId }) => {
             </div>
           </div>
           <div className="flex space-x-2">
-            <button className="p-2 text-blue-500 hover:bg-blue-100 rounded-full">
+            <button 
+            onClick={createMeeting}
+            className="p-2 text-blue-500 hover:bg-blue-100 rounded-full">
               <FaVideo size={20} />
             </button>
             <button
@@ -458,9 +468,25 @@ const ChatWindow = ({ groupId }) => {
           ))}
         </div>
 
+{/* Hiển thị cuộc họp nếu có link */}
+{roomLink && (
+        <div className="w-full p-4 bg-white border-t">
+          <h4 className="font-semibold text-gray-700">Cuộc họp video</h4>
+          <p>
+            Tham gia cuộc họp: <a href={roomLink} target="_blank" rel="noopener noreferrer">{roomLink}</a>
+          </p>
+          <iframe
+            src={roomLink}
+            style={{ height: "500px", width: "100%", border: "none" }}
+            allow="camera; microphone; fullscreen"
+            title="Video Call"
+          ></iframe>
+        </div>
+      )}
         {/* Input */}
         <ChatInput onSendMessage={handleSendMessage} />
       </div>
+       
 
       {showGroupInfo && (
         <GroupInfo
@@ -469,6 +495,7 @@ const ChatWindow = ({ groupId }) => {
           users={users}
           groupId={groupId}
           onClose={closeGroupInfo}
+          groupName = {groupName}
         />
       )}
     </div>
