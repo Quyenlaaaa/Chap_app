@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import GroupInfo from "./GroupInfo";
-import { FaVideo, FaInfoCircle } from "react-icons/fa";
+import { FaVideo, FaInfoCircle, FaTimes } from "react-icons/fa";
 import Message from "./Message";
 import ChatInput from "./ChatInput";
 import SockJS from "sockjs-client";
@@ -22,11 +22,19 @@ const ChatWindow = ({ groupId }) => {
   const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [roomLink, setRoomLink] = useState("");
-   // Hàm tạo phòng họp
-   const createMeeting = () => {
+  const [showMeeting, setShowMeeting] = useState(true); // Quản lý trạng thái hiển thị roomLink
+
+  const toggleMeetingVisibility = () => {
+    setShowMeeting(!showMeeting); // Đảo ngược giá trị hiển thị
+  };
+  // Hàm tạo phòng họp
+  const createMeeting = () => {
     const roomId = `group-chat-room-${Date.now()}`;
     const link = `https://meet.jit.si/${roomId}`;
     setRoomLink(link);
+    // sendMeetingLinkToGroup(link);
+    const msg = `Tham gia cuộc họp tại: ${link}`;
+    handleSendMessage(msg, null);
     console.log("Meeting link:", link); // Debug
   };
 
@@ -281,11 +289,11 @@ const ChatWindow = ({ groupId }) => {
   const handlePinMessage = async (messageId, setPinnedMessage) => {
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         throw new Error("Người dùng chưa đăng nhập.");
       }
-  
+
       const response = await fetch(
         `http://localhost:8090/api/messages/${messageId}/pin`,
         {
@@ -296,15 +304,15 @@ const ChatWindow = ({ groupId }) => {
           },
         }
       );
-  
+
       if (response.ok) {
         const responseData = await response.json();
-  
+
         if (responseData.code === 1000) {
           // Cập nhật trạng thái tin nhắn ghim
           const pinnedMessage = responseData.result;
           setPinnedMessage(pinnedMessage);
-  
+
           alert("Tin nhắn đã được ghim thành công.");
         } else {
           throw new Error(responseData.message || "Ghim tin nhắn thất bại.");
@@ -317,7 +325,6 @@ const ChatWindow = ({ groupId }) => {
       alert(`Đã xảy ra lỗi: ${error.message}`);
     }
   };
-  
 
   const handleDeleteMessage = (messageId) => {
     const confirmDelete = window.confirm("Bạn có chắc muốn xóa tin nhắn này?");
@@ -380,10 +387,10 @@ const ChatWindow = ({ groupId }) => {
     }
   };
   const handleGroupNameChange = (newGroupName) => {
-    setGroupName(newGroupName); 
+    setGroupName(newGroupName);
   };
   const handleMemberCountChange = (count) => {
-    setMemberCount(count); 
+    setMemberCount(count);
   };
   const closeGroupInfo = () => {
     setShowGroupInfo(false);
@@ -427,9 +434,10 @@ const ChatWindow = ({ groupId }) => {
             </div>
           </div>
           <div className="flex space-x-2">
-            <button 
-            onClick={createMeeting}
-            className="p-2 text-blue-500 hover:bg-blue-100 rounded-full">
+            <button
+              onClick={createMeeting}
+              className="p-2 text-blue-500 hover:bg-blue-100 rounded-full"
+            >
               <FaVideo size={20} />
             </button>
             <button
@@ -446,7 +454,9 @@ const ChatWindow = ({ groupId }) => {
           <div className="p-4 bg-yellow-100 border-b flex items-center justify-between">
             <div>
               <h4 className="font-semibold text-gray-700">Tin nhắn đã ghim:</h4>
-              <p className="text-sm text-gray-600">{pinnedMessage.messageText}</p>
+              <p className="text-sm text-gray-600">
+                {pinnedMessage.messageText}
+              </p>
             </div>
             <button
               // onClick={() => setPinnedMessage(null)}
@@ -473,25 +483,38 @@ const ChatWindow = ({ groupId }) => {
           ))}
         </div>
 
-{/* Hiển thị cuộc họp nếu có link */}
-{roomLink && (
-        <div className="w-full p-4 bg-white border-t">
-          <h4 className="font-semibold text-gray-700">Cuộc họp video</h4>
-          <p>
-            Tham gia cuộc họp: <a href={roomLink} target="_blank" rel="noopener noreferrer">{roomLink}</a>
-          </p>
-          <iframe
-            src={roomLink}
-            style={{ height: "500px", width: "100%", border: "none" }}
-            allow="camera; microphone; fullscreen"
-            title="Video Call"
-          ></iframe>
-        </div>
-      )}
+        {/* Hiển thị hoặc ẩn cuộc họp video nếu có link */}
+        {roomLink && showMeeting && (
+          <div className="w-full p-4 bg-white border-t">
+            {/* Nút bật/tắt cuộc họp */}
+            <button
+              onClick={toggleMeetingVisibility}
+              className="p-2 text-blue-500 hover:bg-blue-100 rounded-full"
+            >
+              {showMeeting ? (
+                <FaTimes size={20} /> // Dùng icon X khi đang hiển thị
+              ) : (
+                <FaVideo size={20} /> // Dùng icon video khi đang ẩn
+              )}
+            </button>
+            <h4 className="font-semibold text-gray-700">Cuộc họp video</h4>
+            <p>
+              Tham gia cuộc họp:{" "}
+              <a href={roomLink} target="_blank" rel="noopener noreferrer">
+                {roomLink}
+              </a>
+            </p>
+            <iframe
+              src={roomLink}
+              style={{ height: "500px", width: "100%", border: "none" }}
+              allow="camera; microphone; fullscreen"
+              title="Video Call"
+            ></iframe>
+          </div>
+        )}
         {/* Input */}
         <ChatInput onSendMessage={handleSendMessage} />
       </div>
-       
 
       {showGroupInfo && (
         <GroupInfo
@@ -500,9 +523,9 @@ const ChatWindow = ({ groupId }) => {
           users={users}
           groupId={groupId}
           onClose={closeGroupInfo}
-          groupName = {groupName}
-          onChangeGroupName = {handleGroupNameChange}
-          onChangeMemberCount = {handleMemberCountChange}
+          groupName={groupName}
+          onChangeGroupName={handleGroupNameChange}
+          onChangeMemberCount={handleMemberCountChange}
         />
       )}
     </div>
