@@ -12,6 +12,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
+import { FaEnvelope } from "react-icons/fa";
 
 export default function UserList() {
   const [data, setData] = useState(userRows);
@@ -25,7 +26,6 @@ export default function UserList() {
   });
 
   const token = localStorage.getItem("token");
-  
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -117,22 +117,24 @@ export default function UserList() {
     }
   };
 
-
   // Xử lý mở và đóng dialog
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  
+
   const handleResetPassword = async (email) => {
-    console.log(email)
+    console.log(email);
     try {
-      const response = await fetch("http://localhost:8090/api/users/send-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email }),
-      });
+      const response = await fetch(
+        "http://localhost:8090/api/users/send-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
 
       if (response.ok) {
         toast.success("Password reset successfully!");
@@ -144,7 +146,7 @@ export default function UserList() {
       toast.error("Error resetting password. Please try again later.");
     }
   };
-  
+
   // Xử lý tạo user mới
   // Xử lý tạo user mới
   const handleCreateUser = async () => {
@@ -187,12 +189,11 @@ export default function UserList() {
     }
   };
 
-
   const columns = [
     { field: "id", headerName: "ID", width: 90 },
     {
       field: "user",
-      headerName: "User",
+      headerName: "Người dùng",
       width: 200,
       renderCell: (params) => {
         return (
@@ -205,52 +206,54 @@ export default function UserList() {
     },
     {
       field: "role",
-      headerName: "Role",
+      headerName: "Vai trò",
       width: 150,
       renderCell: (params) => (
         <select
           value={params.row.role}
           onChange={(e) => handleRoleChange(params.row.id, e.target.value)}
+          className="border border-gray-300 rounded-md px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
         >
           <option value="NORMAL">Normal User</option>
           <option value="MODERATOR">Moderator</option>
           <option value="ADMIN">Admin</option>
         </select>
       ),
+      
     },
     { field: "email", headerName: "Email", width: 200 },
     {
       field: "action",
-      headerName: "Action",
+      headerName: "Điều chỉnh",
       width: 200,
       renderCell: (params) => {
         return (
-          <>
-            {/* <Link to={"/user/" + params.row.id}>
-              <button className="userListEdit">Reset Password</button>
-            </Link> */}
-            <button
-              className="userListEdit"
-              onClick={() => handleResetPassword(params.row.email)} // Thêm sự kiện reset password
-            >
-              Send Password
-            </button>
-            <DeleteOutline
-              className="userListDelete"
-              onClick={() => handleDelete(params.row.id)}
+          <div className="flex items-center space-x-4">
+            <FaEnvelope
+              className="text-blue-500 cursor-pointer hover:text-blue-700"
+              onClick={() => handleResetPassword(params.row.email)}
+              size={20}
+              title="Send Password"
             />
-          </>
+            <DeleteOutline
+              className="text-red-500 cursor-pointer hover:text-red-700"
+              onClick={() => handleDelete(params.row.id)}
+              size={20}
+              title="Delete"
+            />
+          </div>
         );
       },
+      
     },
   ];
 
   return (
     <div className="userList">
       <div style={{ marginBottom: "20px" }}>
-      <Button variant="contained" color="primary" onClick={handleOpen}>
-        Create New User
-      </Button>
+        <Button variant="contained" color="primary" onClick={handleOpen}>
+          Tạo tài khoản mới
+        </Button>
       </div>
       <DataGrid
         rows={data}
@@ -260,14 +263,12 @@ export default function UserList() {
         checkboxSelection
       />
 
-      {/* Dialog for creating new user */}
-     {/* Dialog for creating new user */}
-     <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Create New User</DialogTitle>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Tạo người dùng mới</DialogTitle>
         <DialogContent>
           <TextField
             margin="dense"
-            label="Name"
+            label="Tên"
             fullWidth
             value={newUser.name}
             onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
@@ -281,22 +282,26 @@ export default function UserList() {
           />
           <TextField
             margin="dense"
-            label="Password"
+            label="Mật khẩu"
             type="password"
             fullWidth
             value={newUser.password}
-            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+            onChange={(e) =>
+              setNewUser({ ...newUser, password: e.target.value })
+            }
           />
           <TextField
             margin="dense"
-            label="Role"
+            label="Vai trò"
             fullWidth
             select
             SelectProps={{
               native: true,
             }}
             value={newUser.roleId}
-            onChange={(e) => setNewUser({ ...newUser, roleId: parseInt(e.target.value, 10) })}
+            onChange={(e) =>
+              setNewUser({ ...newUser, roleId: parseInt(e.target.value, 10) })
+            }
           >
             <option value={1}>Admin</option>
             <option value={2}>Moderator</option>

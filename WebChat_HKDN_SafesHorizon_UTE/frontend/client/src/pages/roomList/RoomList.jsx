@@ -1,7 +1,7 @@
 import "./roomList.css";
 import { DataGrid } from '@mui/x-data-grid';
 import { DeleteOutline } from '@mui/icons-material';
-import { Link } from "react-router-dom";
+import {FaEdit} from "react-icons/fa";
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField } from "@mui/material";
@@ -140,31 +140,32 @@ export default function RoomList() {
     { field: "id", headerName: "ID", width: 90 },
     {
       field: "name",
-      headerName: "Room Name",
+      headerName: "Tên nhóm",
       width: 200,
     },
-    { field: "createdByEmail", headerName: "created by", width: 200 },
+    { field: "createdByEmail", headerName: "Người tạo", width: 200 },
     
     {
       field: "action",
-      headerName: "Action",
+      headerName: "Điều chỉnh ",
       width: 200,
-      renderCell: (params) => {
-        return (
-          <>
-            <button
-              className="productListEdit"
-              onClick={() => handleEditClick(params.row)}
-            >
-              Edit
-            </button>
-            <DeleteOutline
-              className="roomListDelete"
-              onClick={() => handleDelete(params.row.id)}
-            />
-          </>
-        );
-      },
+      renderCell: (params) => (
+        <div className="flex items-center space-x-4">
+          <FaEdit
+            className="text-blue-500 cursor-pointer hover:text-blue-700"
+            onClick={() => handleEditClick(params.row)}
+            size={20}
+            title="Edit"
+          />
+          <DeleteOutline
+            className="text-red-500 cursor-pointer hover:text-red-700"
+            onClick={() => handleDelete(params.row.id)}
+            size={20}
+            title="Delete"
+          />
+        </div>
+      ),
+      
     },
   ];
 
@@ -176,7 +177,7 @@ export default function RoomList() {
           color="primary"
           onClick={() => setOpenDialogCreate(true)}
         >
-          Create New Room
+          Tạo nhóm mới
         </Button>
       </div>
       <DataGrid
@@ -188,7 +189,7 @@ export default function RoomList() {
       />
       {/* Dialog để chỉnh sửa Room Name */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Edit Room Name</DialogTitle>
+        <DialogTitle>Sửa tên nhóm</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -210,12 +211,12 @@ export default function RoomList() {
 
 {/* Dialog tạo mới */}
 <Dialog open={openDialogCreate} onClose={() => setOpenDialogCreate(false)}>
-        <DialogTitle>Create New Room</DialogTitle>
+        <DialogTitle>Tạo nhóm mới</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Room Name"
+            label="Tên nhóm"
             type="text"
             fullWidth
             value={newRoomName}
@@ -223,7 +224,7 @@ export default function RoomList() {
           />
           <TextField
             margin="dense"
-            label="Member Emails (comma-separated)"
+            label="Danh sách email, cách nhau dấu phẩy"
             type="text"
             fullWidth
             value={newMemberEmails}

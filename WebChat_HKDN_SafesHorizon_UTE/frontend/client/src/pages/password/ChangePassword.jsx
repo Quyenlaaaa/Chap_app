@@ -40,14 +40,14 @@ export default function ChangePassword() {
 
   return (
     <div className="changePassword">
-      <h1 className="changePasswordTitle">Change Password</h1>
+      <h1 className="changePasswordTitle">Thay đổi mật khẩu</h1>
       <form className="changePasswordForm" onSubmit={handleChangePassword}>
         <div className="changePasswordItem">
-          <label>Old Password</label>
+          <label>Mật khẩu cũ</label>
           <div className="passwordField">
             <input
               type={isOldPasswordVisible ? "text" : "password"}
-              placeholder="Enter your old password"
+              placeholder="Nhập mật khẩu cũ"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               required
@@ -62,11 +62,11 @@ export default function ChangePassword() {
           </div>
         </div>
         <div className="changePasswordItem">
-          <label>New Password</label>
+          <label>Mật khẩu mới</label>
           <div className="passwordField">
             <input
               type={isNewPasswordVisible ? "text" : "password"}
-              placeholder="Enter your new password"
+              placeholder="Nhập mật khẩu mới"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
@@ -81,7 +81,7 @@ export default function ChangePassword() {
           </div>
         </div>
         <button type="submit" className="changePasswordButton" disabled={isLoading}>
-          {isLoading ? "Changing..." : "Change Password"}
+          {isLoading ? "Changing..." : "Thay đổi"}
         </button>
       </form>
     </div>
