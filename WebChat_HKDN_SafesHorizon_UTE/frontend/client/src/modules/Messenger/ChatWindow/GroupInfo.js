@@ -4,13 +4,15 @@ import PropTypes from "prop-types";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function GroupInfo({ groupId, memberCount, users, onClose }) {
+function GroupInfo({ groupId, memberCount, users, onClose,groupName }) {
   const [localUsers, setLocalUsers] = useState(users);
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [showDialog, setShowDialog] = useState(false); 
+  const [newGroupName, setNewGroupName] = useState(groupName); 
+  const [loading, setLoading] = useState(false); 
 
-  // Hàm fetch thông tin thành viên (fetchGroupInfo) trong GroupInfo
   const fetchGroupInfo = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -117,8 +119,41 @@ function GroupInfo({ groupId, memberCount, users, onClose }) {
     }
   };
 
+   // Hàm xử lý cập nhật nhóm
   const handleUpdateGroup = () => {
-    console.log("Cập nhật nhóm");
+    setShowDialog(true); // Hiển thị dialog
+  };
+
+  // Hàm xử lý khi người dùng nhấn "Lưu"
+  const handleSaveGroupName = async () => {
+    if (!newGroupName.trim()) {
+      alert("Tên nhóm không được để trống!");
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:8090/api/rooms/${groupId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: newGroupName }),
+      });
+      if (response.ok) {
+        alert("Cập nhật tên nhóm thành công!");
+        setShowDialog(false);
+      } else {
+        const error = await response.json();
+        alert(`Lỗi: ${error.message || "Không thể cập nhật nhóm!"}`);
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật nhóm:", error);
+      alert("Đã xảy ra lỗi trong khi cập nhật nhóm!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -182,6 +217,38 @@ function GroupInfo({ groupId, memberCount, users, onClose }) {
           Cập nhật nhóm
         </button>
       </div>
+
+        {/* Dialog cập nhật tên nhóm */}
+        {showDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-4">Cập nhật tên nhóm</h3>
+            <input
+              type="text"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              className="w-full border border-gray-300 rounded-md p-2 mb-4"
+              placeholder="Nhập tên nhóm mới"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 bg-gray-300 text-black rounded-md"
+                onClick={() => setShowDialog(false)}
+                disabled={loading}
+              >
+                Hủy
+                </button>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                onClick={handleSaveGroupName}
+                disabled={loading}
+              >
+                {loading ? "Đang lưu..." : "Lưu"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dialog Thêm thành viên */}
       {isAddMemberDialogOpen && (
