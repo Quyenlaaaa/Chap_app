@@ -3,18 +3,14 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import GroupInfo from "./GroupInfo";
-import {
-  FaVideo,
-  FaInfoCircle,
-  FaUserPlus,
-  FaSignOutAlt,
-} from "react-icons/fa";
+import { FaVideo, FaInfoCircle } from "react-icons/fa";
 import Message from "./Message";
 import ChatInput from "./ChatInput";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 
 const ChatWindow = ({ groupId }) => {
+  const [pinnedMessage, setPinnedMessage] = useState(null);
   const [messages, setMessages] = useState([]);
   const [groupName, setGroupName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -24,10 +20,13 @@ const ChatWindow = ({ groupId }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-const [newMemberEmail, setNewMemberEmail] = useState("");
-  
+  const [newMemberEmail, setNewMemberEmail] = useState("");
 
   const stompClientRef = useRef(null);
+
+  const onPinMessage = async (messageId) => {
+    await handlePinMessage(messageId, setPinnedMessage);
+  };
 
   // Reconnect WebSocket in case of disconnection
   const reconnectWebSocket = () => {
@@ -46,7 +45,6 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
         client.subscribe(`/topic/chat/${groupId}`, (messageOutput) => {
           const message = JSON.parse(messageOutput.body);
           console.log(message);
-          // setMessages((prevMessages) => [...prevMessages, message]);
         });
       },
       (error) => {
@@ -56,7 +54,6 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
     );
   };
 
-  // Fetch current user data
   const fetchCurrentUser = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -76,7 +73,7 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
       }
 
       const data = await response.json();
-      setCurrentUser(data.result); // Set current user data
+      setCurrentUser(data.result);
     } catch (error) {
       console.error("Lỗi:", error);
     }
@@ -154,7 +151,7 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
 
     fetchData();
     setupWebSocket();
-    fetchCurrentUser(); // Fetch current user data
+    fetchCurrentUser();
 
     return () => {
       if (stompClientRef.current) {
@@ -171,18 +168,18 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
       reconnectWebSocket();
       return;
     }
-  
+
     // Nếu có file, chuyển đổi file sang Base64
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64Data = reader.result; // Chỉ lấy dữ liệu Base64
+        const base64Data = reader.result;
         const messagePayload = {
           roomId: groupId,
           messageText: messageText,
-          imageBase64: base64Data, // Gửi file dưới dạng Base64
+          imageBase64: base64Data,
         };
-  
+
         // Gửi tin nhắn qua WebSocket
         stompClientRef.current.send(
           `/app/chat/${groupId}`,
@@ -190,16 +187,15 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
           JSON.stringify(messagePayload)
         );
       };
-  
-      reader.readAsDataURL(file); // Đọc file và chuyển sang Base64
+
+      reader.readAsDataURL(file);
     } else {
-      // Nếu không có file, chỉ gửi tin nhắn
       const messagePayload = {
         roomId: groupId,
         messageText: messageText,
-        imageBase64: "", // Không có file
+        imageBase64: "",
       };
-  
+
       stompClientRef.current.send(
         `/app/chat/${groupId}`,
         {},
@@ -208,7 +204,6 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
     }
   };
 
-  
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -247,7 +242,6 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
     fetchMessages();
   }, [groupId]);
 
-  // Handle adding a member
   const handleAddMember = async (email) => {
     try {
       const token = localStorage.getItem("token");
@@ -276,80 +270,97 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
       alert("Lỗi khi thêm thành viên");
     }
   };
-
-  const handlePinMessage = async (messageId) => {
+  const handlePinMessage = async (messageId, setPinnedMessage) => {
     try {
       const token = localStorage.getItem("token");
+  
+      if (!token) {
+        throw new Error("Người dùng chưa đăng nhập.");
+      }
+  
       const response = await fetch(
         `http://localhost:8090/api/messages/${messageId}/pin`,
         {
-          method: "POST",
+          method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
-
+  
       if (response.ok) {
-        alert("Tin nhắn đã được ghim.");
+        const responseData = await response.json();
+  
+        if (responseData.code === 1000) {
+          // Cập nhật trạng thái tin nhắn ghim
+          const pinnedMessage = responseData.result;
+          setPinnedMessage(pinnedMessage);
+  
+          alert("Tin nhắn đã được ghim thành công.");
+        } else {
+          throw new Error(responseData.message || "Ghim tin nhắn thất bại.");
+        }
       } else {
-        throw new Error("Ghim tin nhắn thất bại");
+        throw new Error("Không thể kết nối tới server.");
       }
     } catch (error) {
-      console.error(error);
-      alert("Đã xảy ra lỗi khi ghim tin nhắn");
+      console.error("Lỗi khi ghim tin nhắn:", error.message);
+      alert(`Đã xảy ra lỗi: ${error.message}`);
     }
   };
+  
 
   const handleDeleteMessage = (messageId) => {
     const confirmDelete = window.confirm("Bạn có chắc muốn xóa tin nhắn này?");
     if (!confirmDelete) return;
-  
+
     const token = localStorage.getItem("token");
-    console.log("Xóa tin nhắn với ID:", messageId); // Kiểm tra xem hàm có được gọi không
-  
-    // Gửi yêu cầu xóa tin nhắn
+    console.log("Xóa tin nhắn với ID:", messageId);
+
     fetch(`http://localhost:8090/api/messages/${messageId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((response) => response.json()) // Chuyển đổi phản hồi thành JSON
+      .then((response) => response.json())
       .then((data) => {
         if (data.code === 1000) {
           setMessages((prevMessages) =>
             prevMessages.filter((msg) => msg.id !== messageId)
           );
-          toast.success("Tin nhắn đã được xóa thành công!"); // Thông báo thành công
+          toast.success("Tin nhắn đã được xóa thành công!");
         } else {
-          toast.error("Không thể xóa tin nhắn!"); // Thông báo lỗi
+          toast.error("Không thể xóa tin nhắn!");
         }
       })
       .catch((error) => {
         console.error("Lỗi khi kết nối đến server:", error);
-        toast.error("Đã xảy ra lỗi khi xóa tin nhắn. Vui lòng thử lại."); // Thông báo lỗi khi có lỗi kết nối
+        toast.error("Đã xảy ra lỗi khi xóa tin nhắn. Vui lòng thử lại.");
       });
   };
-  
 
   const fetchGroupInfo = async (groupId) => {
     try {
-      const token = localStorage.getItem("token"); // Hoặc cách lấy token bạn đang sử dụng
-      const response = await fetch(`http://localhost:8090/api/rooms/${groupId}/users`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://localhost:8090/api/rooms/${groupId}/users`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
-      const data = await response.json(); // Parse JSON từ response
-      if (data.code === 1000) { // Kiểm tra mã phản hồi thành công
+
+      const data = await response.json();
+      if (data.code === 1000) {
         const members = data.result;
         setUsers(members);
         setMemberCount(members.length);
@@ -360,7 +371,7 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
       console.error("Lỗi khi gọi API:", error);
     }
   };
-  
+
   const closeGroupInfo = () => {
     setShowGroupInfo(false);
   };
@@ -368,9 +379,6 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
     fetchGroupInfo();
   }, [groupId]);
 
-  
-
-  
   if (!groupId) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -392,6 +400,7 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
           showGroupInfo ? "w-2/3" : "w-full"
         } transition-all duration-300`}
       >
+        {/* Header */}
         <div className="flex items-center justify-between p-4 bg-white border-b">
           <div className="flex items-center space-x-3">
             <img
@@ -417,35 +426,51 @@ const [newMemberEmail, setNewMemberEmail] = useState("");
           </div>
         </div>
 
+        {/* Khu vực tin nhắn được ghim */}
+        {pinnedMessage && (
+          <div className="p-4 bg-yellow-100 border-b flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-gray-700">Tin nhắn đã ghim:</h4>
+              <p className="text-sm text-gray-600">{pinnedMessage.messageText}</p>
+            </div>
+            <button
+              // onClick={() => setPinnedMessage(null)}
+              className="text-red-500 hover:text-red-700"
+            >
+              Gỡ ghim
+            </button>
+          </div>
+        )}
+
+        {/* Message list */}
         <div className="flex-1 p-4 overflow-y-auto">
           {messages.map((msg) => (
             <Message
-              key={msg.id} // Đảm bảo sử dụng ID tin nhắn thay vì index
-              image={msg.userResponse.imagePath} // Avatar của user gửi tin nhắn
-              userName={msg.userResponse.name} // Tên người gửi
-              text={msg.messageText} // Nội dung tin nhắn
-              fileUrl={msg.fileUrl} // URL file
-              onPin={() => handlePinMessage(msg.id)} // Xử lý ghim tin nhắn
-              onDelete={() => handleDeleteMessage(msg.id)} // Xử lý xóa tin nhắn
-              isSentByCurrentUser={
-                msg.userResponse.email ===  currentUser.email
-              } // Điều chỉnh cho người gửi
+              key={msg.id}
+              image={msg.userResponse.imagePath}
+              userName={msg.userResponse.name}
+              text={msg.messageText}
+              fileUrl={msg.fileUrl}
+              onPin={() => onPinMessage(msg.id)}
+              onDelete={() => handleDeleteMessage(msg.id)}
+              isSentByCurrentUser={msg.userResponse.email === currentUser.email}
             />
           ))}
         </div>
 
+        {/* Input */}
         <ChatInput onSendMessage={handleSendMessage} />
       </div>
 
       {showGroupInfo && (
-  <GroupInfo
-    showGroupInfo={showGroupInfo}
-    memberCount={users.length}  // Số thành viên có thể được lấy từ state trong GroupInfo.js
-    users={users}               // Danh sách người dùng cũng có thể lấy từ state trong GroupInfo.js
-    groupId={groupId}           // ID nhóm sẽ được truyền vào như cũ
-    onClose={closeGroupInfo}    // Hàm đóng GroupInfo sẽ được truyền vào
-  />
-)}
+        <GroupInfo
+          showGroupInfo={showGroupInfo}
+          memberCount={users.length}
+          users={users}
+          groupId={groupId}
+          onClose={closeGroupInfo}
+        />
+      )}
     </div>
   );
 };
