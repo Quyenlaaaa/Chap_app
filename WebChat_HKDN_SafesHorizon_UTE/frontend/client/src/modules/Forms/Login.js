@@ -145,7 +145,7 @@ const Form = ({ isSignInPage = true }) => {
                     <div className="relative mb-6 w-[75%]">
                         <Input
                             label="Mật khẩu"
-                            type={showPassword ? "text" : "password"}
+                            type={showConfirmPassword ? "text" : "password"}
                             name="password"
                             placeholder="Nhập mật khẩu"
                             className="w-full"
@@ -153,8 +153,8 @@ const Form = ({ isSignInPage = true }) => {
                             onChange={(e) => setData({ ...data, password: e.target.value })}
                         />
                         <TogglePasswordButton
-                            showPassword={showPassword}
-                            setShowPassword={setShowPassword}
+                            showConfirmPassword={showConfirmPassword}
+                            setShowConfirmPassword={setShowConfirmPassword}
                         />
                     </div>
 

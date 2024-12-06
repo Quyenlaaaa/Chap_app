@@ -379,7 +379,12 @@ const ChatWindow = ({ groupId }) => {
       console.error("Lỗi khi gọi API:", error);
     }
   };
-
+  const handleGroupNameChange = (newGroupName) => {
+    setGroupName(newGroupName); 
+  };
+  const handleMemberCountChange = (count) => {
+    setMemberCount(count); 
+  };
   const closeGroupInfo = () => {
     setShowGroupInfo(false);
   };
@@ -496,6 +501,8 @@ const ChatWindow = ({ groupId }) => {
           groupId={groupId}
           onClose={closeGroupInfo}
           groupName = {groupName}
+          onChangeGroupName = {handleGroupNameChange}
+          onChangeMemberCount = {handleMemberCountChange}
         />
       )}
     </div>

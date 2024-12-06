@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function GroupInfo({ groupId, memberCount, users, onClose,groupName }) {
+function GroupInfo({ groupId, memberCount, users, onClose,groupName,onChangeGroupName,onChangeMemberCount }) {
   const [localUsers, setLocalUsers] = useState(users);
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
@@ -70,6 +70,7 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName }) {
         // Hiển thị thông báo thành công
         toast.success("Thành viên đã được xóa khỏi nhóm!");
         fetchGroupInfo(); // Cập nhật danh sách thành viên sau khi xóa
+        onChangeMemberCount(localUsers.length-1)
       } else {
         // Hiển thị thông báo lỗi
         toast.error(`Lỗi khi xóa thành viên: ${data.message}`);
@@ -106,22 +107,22 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName }) {
   
       const data = await response.json();
       if (response.ok && data.code === 1000) {
-        fetchGroupInfo(); // Gọi lại fetchGroupInfo để làm mới danh sách thành viên
+        fetchGroupInfo();
         closeAddMemberDialog();
-        toast.success("Thêm thành viên thành công!"); // Hiển thị thông báo thành công
+        onChangeMemberCount(localUsers.length+1)
+        toast.success("Thêm thành viên thành công!"); 
       } else {
         console.error("Lỗi khi thêm thành viên:", data.message);
-        toast.error("Thêm thành viên thất bại: " + data.message); // Hiển thị thông báo lỗi
+        toast.error("Thêm thành viên thất bại: " + data.message);
       }
     } catch (error) {
       console.error("Lỗi khi gọi API thêm thành viên:", error);
-      toast.error("Đã xảy ra lỗi khi thêm thành viên!"); // Hiển thị thông báo lỗi chung
+      toast.error("Đã xảy ra lỗi khi thêm thành viên!"); 
     }
   };
 
-   // Hàm xử lý cập nhật nhóm
   const handleUpdateGroup = () => {
-    setShowDialog(true); // Hiển thị dialog
+    setShowDialog(true); 
   };
 
   // Hàm xử lý khi người dùng nhấn "Lưu"
@@ -143,6 +144,7 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName }) {
       });
       if (response.ok) {
         alert("Cập nhật tên nhóm thành công!");
+        onChangeGroupName(newGroupName);
         setShowDialog(false);
       } else {
         const error = await response.json();

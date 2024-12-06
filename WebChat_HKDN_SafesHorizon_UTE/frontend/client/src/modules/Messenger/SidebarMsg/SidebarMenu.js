@@ -42,6 +42,10 @@ const SidebarMenu = () => {
     setIsModalOpen(true);
   };
 
+  const handleAvatarChange = (newAvatarUrl) => {
+    setUserAvatar(newAvatarUrl); 
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
@@ -115,7 +119,8 @@ const SidebarMenu = () => {
       <UserProfileModal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
-        user={user} // Truyền thông tin người dùng vào modal
+        user={user} 
+        onAvatarChange={handleAvatarChange}// Truyền thông tin người dùng vào modal
       />
     </div>
   );

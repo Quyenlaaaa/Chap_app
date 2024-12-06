@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const UserProfileModal = ({ isOpen, onClose, user }) => {
+const UserProfileModal = ({ isOpen, onClose, user , onAvatarChange }) => {
   const [name, setName] = useState(user?.name || "Nguyễn Văn A");
   const [email, setEmail] = useState(user?.email || "email@example.com");
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -54,9 +54,11 @@ const handleUpdateProfile = async () => {
       const errorData = await response.json();
       throw new Error(errorData.message || "Đã xảy ra lỗi khi cập nhật!");
     }
-
+    
     const result = await response.json();
     toast.success(result.message || "Cập nhật thành công!"); // Thông báo thành công
+    console.log(result.result.imagePath)
+    onAvatarChange(`http://localhost:8090/profile/${result.result.imagePath}`);
     onClose();
   } catch (error) {
     console.error(error);
@@ -70,6 +72,7 @@ const handleUpdateProfile = async () => {
     if (file) {
       setImage(file);
       setPreviewImage(URL.createObjectURL(file));
+     
     }
   };
 

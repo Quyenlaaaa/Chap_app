@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const CreateGroupModal = ({ onClose }) => {
+const CreateGroupModal = ({ onClose, onGroupChange}) => {
   const [users, setUsers] = useState([]); // Danh sách người dùng từ API
   const [selectedUsers, setSelectedUsers] = useState([]); // Danh sách người dùng được chọn
   const [groupName, setGroupName] = useState(''); // Tên nhóm
@@ -78,6 +78,7 @@ const CreateGroupModal = ({ onClose }) => {
       const data = await response.json();
       console.log('Tạo nhóm thành công:', data);
 
+      onGroupChange(data.result)
       alert('Nhóm đã được tạo thành công!');
       onClose(); // Đóng modal sau khi xử lý thành công
     } catch (err) {

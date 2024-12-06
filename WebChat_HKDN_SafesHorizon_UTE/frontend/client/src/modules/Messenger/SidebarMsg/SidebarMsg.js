@@ -35,9 +35,15 @@ const SidebarMsg = ({ onGroupSelect }) => {
     fetchGroups();
   }, []);
 
-  const filteredGroups = groups.filter((group) =>
-    group.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredGroups = Array.isArray(groups)
+  ? groups.filter((group) =>
+      group.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  : [];
+
+  const handleAddGroup = (newGroup) => {
+    setGroups((prevGroups) => [...prevGroups, newGroup]); // Cập nhật danh sách nhóm
+  };
 
   if (loading) {
     return <div className="w-80 text-center p-4">Đang tải danh sách nhóm...</div>;
@@ -77,7 +83,9 @@ const SidebarMsg = ({ onGroupSelect }) => {
       >
         + Tạo nhóm mới
       </button>
-      {showModal && <CreateGroupModal onClose={() => setShowModal(false)} />}
+      {showModal && <CreateGroupModal 
+      onClose={() => setShowModal(false)}
+      onGroupChange={handleAddGroup} />}
     </div>
   );
 };

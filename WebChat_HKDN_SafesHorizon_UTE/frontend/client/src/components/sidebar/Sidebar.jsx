@@ -78,6 +78,12 @@ export default function Sidebar() {
                 Đổi mật khẩu
               </li>
             </Link>
+            {/* <Link to="admin/auth" className="link">
+              <li className="sidebarListItem">
+                <TrendingUp className="sidebarIcon" />
+                Cập nhật thông tin
+              </li>
+            </Link> */}
             {/* Đăng xuất */}
             <li className="sidebarListItem" onClick={handleLogout}>
               <TrendingUp className="sidebarIcon" />
