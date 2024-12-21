@@ -16,6 +16,8 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName,onChangeGrou
   const fetchGroupInfo = async () => {
     try {
       const token = localStorage.getItem("token");
+      // if (groupId==null)
+        // groupId = 12;
       const response = await fetch(`http://localhost:8090/api/rooms/${groupId}/users`, {
         method: "GET",
         headers: {
@@ -175,7 +177,8 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName,onChangeGrou
           <li key={index} className="flex items-center justify-between space-x-3">
             <div className="flex items-center space-x-3">
               <img
-                src={`https://i.pravatar.cc/150?img=${index}`}
+                // src={`https://i.pravatar.cc/150?img=${index}`}
+                src={`http://localhost:8090/profile/${user.imagePath}`}
                 alt={user.name}
                 className="w-8 h-8 rounded-full"
               />

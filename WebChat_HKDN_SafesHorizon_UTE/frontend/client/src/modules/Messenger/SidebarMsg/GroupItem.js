@@ -7,7 +7,8 @@ const GroupItem = ({ id, name, avatar, onClick }) => {
       onClick={() => onClick(id)}
     >
       <img
-        src={avatar || 'https://via.placeholder.com/40'}
+        src={'https://cdn-icons-png.flaticon.com/512/718/718339.png'}
+
         alt="Avatar"
         className="w-10 h-10 rounded-full mr-2"
       />

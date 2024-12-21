@@ -424,7 +424,8 @@ const ChatWindow = ({ groupId }) => {
         <div className="flex items-center justify-between p-4 bg-white border-b">
           <div className="flex items-center space-x-3">
             <img
-              src="https://i.pravatar.cc/150?img=2"
+              // src="https://i.pravatar.cc/150?img=2"
+              src="https://cdn-icons-png.flaticon.com/512/718/718339.png"
               alt="Group Avatar"
               className="w-10 h-10 rounded-full"
             />
@@ -459,7 +460,7 @@ const ChatWindow = ({ groupId }) => {
               </p>
             </div>
             <button
-              // onClick={() => setPinnedMessage(null)}
+              onClick={() => setPinnedMessage(null)}
               className="text-red-500 hover:text-red-700"
             >
               Gỡ ghim
