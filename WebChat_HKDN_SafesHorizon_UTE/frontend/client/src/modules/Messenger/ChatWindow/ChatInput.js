@@ -13,37 +13,32 @@ const ChatInput = ({ onSendMessage }) => {
     const uploadedFile = e.target.files[0];
     if (uploadedFile) {
       setFile(uploadedFile);
-      setFileName(uploadedFile.name); // Lưu tên file
+      setFileName(uploadedFile.name); 
     }
   };
 
   const handleSend = () => {
     if (messageText.trim() || file) {
-      // Nếu có file, chuyển file thành Base64 trước khi gửi
       if (file) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          // Chuyển đổi file thành Base64
-          // const base64File = reader.result.split(",")[1]; // Lấy phần Base64 của file
           const base64File = reader.result;
-          // onSendMessage(messageText, base64File); // Gửi tin nhắn với Base64
           onSendMessage(messageText, file);
         };
-        reader.readAsDataURL(file); // Đọc file và chuyển sang Base64
+        reader.readAsDataURL(file); 
       } else {
-        onSendMessage(messageText, ""); // Gửi chỉ tin nhắn nếu không có file
+        onSendMessage(messageText, ""); 
       }
 
-      // Sau khi gửi, reset các trạng thái
       setMessageText("");
       setFile(null);
-      setFileName(""); // Xóa tên file
+      setFileName(""); 
     }
   };
 
   const handleRemoveFile = () => {
     setFile(null);
-    setFileName(""); // Xóa file đang chọn
+    setFileName(""); 
   };
 
   return (

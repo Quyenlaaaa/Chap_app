@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import GroupInfo from "./GroupInfo";
 import { FaVideo, FaInfoCircle, FaTimes } from "react-icons/fa";
 import Message from "./Message";
@@ -19,23 +18,19 @@ const ChatWindow = ({ groupId }) => {
   const [users, setUsers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-  const [newMemberEmail, setNewMemberEmail] = useState("");
   const [roomLink, setRoomLink] = useState("");
-  const [showMeeting, setShowMeeting] = useState(true); // Quản lý trạng thái hiển thị roomLink
+  const [showMeeting, setShowMeeting] = useState(true); 
 
   const toggleMeetingVisibility = () => {
-    setShowMeeting(!showMeeting); // Đảo ngược giá trị hiển thị
+    setShowMeeting(!showMeeting); 
   };
-  // Hàm tạo phòng họp
   const createMeeting = () => {
     const roomId = `group-chat-room-${Date.now()}`;
     const link = `https://meet.jit.si/${roomId}`;
     setRoomLink(link);
-    // sendMeetingLinkToGroup(link);
     const msg = `Tham gia cuộc họp tại: ${link}`;
     handleSendMessage(msg, null);
-    console.log("Meeting link:", link); // Debug
+    console.log("Meeting link:", link); 
   };
 
   const stompClientRef = useRef(null);
@@ -44,7 +39,6 @@ const ChatWindow = ({ groupId }) => {
     await handlePinMessage(messageId, setPinnedMessage);
   };
 
-  // Reconnect WebSocket in case of disconnection
   const reconnectWebSocket = () => {
     const socket = new SockJS(
       `http://localhost:8090/ws?token=${localStorage.getItem("token")}`
@@ -95,10 +89,8 @@ const ChatWindow = ({ groupId }) => {
     }
   };
 
-  // Fetch data from the server
   useEffect(() => {
     if (!groupId) return;
-
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -138,7 +130,6 @@ const ChatWindow = ({ groupId }) => {
       }
     };
 
-    // Set up WebSocket connection
     const setupWebSocket = () => {
       const socket = new SockJS(
         `http://localhost:8090/ws?token=${localStorage.getItem("token")}`
@@ -177,7 +168,6 @@ const ChatWindow = ({ groupId }) => {
     };
   }, [groupId]);
 
-  // Handle sending message
   const handleSendMessage = (messageText, file) => {
     if (!stompClientRef.current || !stompClientRef.current.connected) {
       alert("Không thể gửi tin nhắn. Kết nối WebSocket không thành công.");

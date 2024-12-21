@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaVideo, FaInfoCircle, FaUserPlus, FaSignOutAlt,FaTimes  } from "react-icons/fa";
-import PropTypes from "prop-types";
+import { FaUserPlus,FaTimes  } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -16,8 +15,6 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName,onChangeGrou
   const fetchGroupInfo = async () => {
     try {
       const token = localStorage.getItem("token");
-      // if (groupId==null)
-        // groupId = 12;
       const response = await fetch(`http://localhost:8090/api/rooms/${groupId}/users`, {
         method: "GET",
         headers: {
@@ -42,12 +39,10 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName,onChangeGrou
     }
   };
 
-  // Gọi fetchGroupInfo khi component mount hoặc groupId thay đổi
   useEffect(() => {
     fetchGroupInfo();
   }, [groupId]);
 
-  // Hàm để toggle menu của từng thành viên
   const toggleMemberMenu = (index) => {
     setOpenMenuIndex(openMenuIndex === index ? null : index);
   };
@@ -69,17 +64,14 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName,onChangeGrou
   
       const data = await response.json();
       if (response.ok && data.code === 1000) {
-        // Hiển thị thông báo thành công
         toast.success("Thành viên đã được xóa khỏi nhóm!");
-        fetchGroupInfo(); // Cập nhật danh sách thành viên sau khi xóa
+        fetchGroupInfo(); 
         onChangeMemberCount(localUsers.length-1)
       } else {
-        // Hiển thị thông báo lỗi
         toast.error(`Lỗi khi xóa thành viên: ${data.message}`);
       }
     } catch (error) {
       console.error("Lỗi khi gọi API xóa thành viên:", error);
-      // Hiển thị thông báo lỗi khi có sự cố kết nối
       toast.error("Đã xảy ra lỗi khi xóa thành viên. Vui lòng thử lại.");
     }
   };
@@ -127,7 +119,6 @@ function GroupInfo({ groupId, memberCount, users, onClose,groupName,onChangeGrou
     setShowDialog(true); 
   };
 
-  // Hàm xử lý khi người dùng nhấn "Lưu"
   const handleSaveGroupName = async () => {
     if (!newGroupName.trim()) {
       alert("Tên nhóm không được để trống!");
