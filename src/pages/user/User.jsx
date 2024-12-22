@@ -1,11 +1,3 @@
-import {
-  CalendarToday,
-  LocationSearching,
-  MailOutline,
-  PermIdentity,
-  PhoneAndroid,
-  Publish,
-} from '@mui/icons-material';
 import { Link } from "react-router-dom";
 import "./user.css";
 

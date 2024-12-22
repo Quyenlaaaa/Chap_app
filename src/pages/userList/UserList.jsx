@@ -2,8 +2,7 @@ import "./userList.css";
 import { DataGrid } from "@mui/x-data-grid";
 import { DeleteOutline } from "@mui/icons-material";
 import { userRows } from "../../dummyData";
-import { Link } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Button from "@mui/material/Button";
@@ -17,26 +16,39 @@ import { FaEnvelope } from "react-icons/fa";
 export default function UserList() {
   const [data, setData] = useState(userRows);
   const [error, setError] = useState(null);
-  const [open, setOpen] = useState(false); // State để quản lý dialog
+  const [open, setOpen] = useState(false);
+  const [totalRows, setTotalRows] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 5,
+  });
+
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     password: "",
-    roleId: 3, // Default là NORMAL
+    roleId: 3,
   });
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const fetchUsers = async () => {
+  const fetchUsers = useCallback(
+    async (page, size) => {
+      setIsLoading(true);
       try {
-        const response = await fetch("http://localhost:8090/api/users", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          `http://localhost:8090/api/users?page=${page}&size=${size}&sort=id`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         if (response.status === 401) {
           throw new Error("Unauthorized: Invalid token or expired session");
         }
@@ -46,7 +58,7 @@ export default function UserList() {
         }
 
         const result = await response.json();
-        const formattedData = result.result.map((user, index) => ({
+        const formattedData = result.result.content.map((user, index) => ({
           id: user.id || index,
           username: user.name,
           email: user.email,
@@ -54,19 +66,25 @@ export default function UserList() {
             ? `http://localhost:8090/profile/${user.imagePath}`
             : "http://localhost:8090/profile/default-avatar-url.png",
           isVerify: user.isVerify,
-          role: user.roleResponse.name || "User",
+          role: user.roleResponse?.name || "User",
           status: user.status || "Active",
         }));
 
         setData(formattedData);
+        setTotalRows(result.result.totalElements);
       } catch (error) {
         console.error("Failed to fetch user data:", error);
         setError(error.message);
+      } finally {
+        setIsLoading(false);
       }
-    };
+    },
+    [token]
+  );
 
-    fetchUsers();
-  }, [token]);
+  useEffect(() => {
+    fetchUsers(paginationModel.page, paginationModel.pageSize);
+  }, [paginationModel, fetchUsers]);
 
   const handleRoleChange = async (id, newRole) => {
     try {
@@ -147,8 +165,6 @@ export default function UserList() {
     }
   };
 
-  // Xử lý tạo user mới
-  // Xử lý tạo user mới
   const handleCreateUser = async () => {
     try {
       const response = await fetch("http://localhost:8090/api/users", {
@@ -219,7 +235,6 @@ export default function UserList() {
           <option value="ADMIN">Admin</option>
         </select>
       ),
-      
     },
     { field: "email", headerName: "Email", width: 200 },
     {
@@ -244,7 +259,6 @@ export default function UserList() {
           </div>
         );
       },
-      
     },
   ];
 
@@ -257,9 +271,15 @@ export default function UserList() {
       </div>
       <DataGrid
         rows={data}
-        disableSelectionOnClick
         columns={columns}
-        pageSize={8}
+        pageSizeOptions={[5, 10, 20]} 
+        paginationMode="server" 
+        paginationModel={paginationModel} 
+        loading={isLoading}
+        rowCount={totalRows} 
+        onPaginationModelChange={(newPaginationModel) => {
+          setPaginationModel(newPaginationModel); 
+        }}
         checkboxSelection
       />
 

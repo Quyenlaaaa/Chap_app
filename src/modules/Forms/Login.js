@@ -9,7 +9,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 const Form = ({ isSignInPage = true }) => {
     const [data, setData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
-    const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState("");

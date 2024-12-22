@@ -1,7 +1,4 @@
 import './App.css';
-import SidebarMsg from './modules/Messenger/SidebarMsg/SidebarMsg';
-import ChatWindow from './modules/Messenger/ChatWindow/ChatWindow';
-import SidebarMenu from './modules/Messenger/SidebarMsg/SidebarMenu';
 import Form from './modules/Forms/Login'; 
 import ForgotPassword from './modules/Forms/ForgotPassword';
 import { Routes, Route, Navigate } from 'react-router-dom';
