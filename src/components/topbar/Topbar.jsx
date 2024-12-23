@@ -8,7 +8,6 @@ export default function Topbar() {
   const [user, setUser] = useState(null); 
   const [userAvatar, setUserAvatar] = useState(''); 
 
-      // Lấy thông tin người dùng
       useEffect(() => {
         const fetchUser = async () => {
           try {
@@ -24,9 +23,8 @@ export default function Topbar() {
             }
     
             const data = await response.json();
-            const userData = data.result; // Dữ liệu người dùng từ API
-            setUser(userData); // Lưu thông tin người dùng
-            // Lấy ảnh người dùng
+            const userData = data.result; 
+            setUser(userData); 
             setUserAvatar(`http://localhost:8090/profile/${userData.imagePath}`);
             
           } catch (error) {
@@ -67,7 +65,6 @@ export default function Topbar() {
           </div>
         </div>
       </div>
-      {/* Modal Hồ sơ người dùng */}
       <UserProfileModal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 

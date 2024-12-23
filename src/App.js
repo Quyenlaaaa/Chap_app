@@ -18,7 +18,6 @@ import Chat from './pages/chat/Chat';
 
 function App() {
   return (
-    // <div className="flex h-screen">
       <Routes>
       <Route path="/login" element={<Form isSignInPage={true} />} />
         <Route path="*" element={
@@ -40,24 +39,13 @@ function App() {
             </div>
           </>
         } />
-        {/* <Route path="client/" element={<Navigate to="/login" replace />} /> */}
-        {/* <Route path="client/home" element={
-          <div className="flex h-screen">
-          <div className="flex h-full w-full">
-            <SidebarMenu className="h-full" />
-            <SidebarMsg className="h-full" />
-            <ChatWindow className="h-full" />
-            </div>
-          </div>
-        } /> */}
+        
         <Route path="client/home" element={<Chat />} />
         <Route path="client/room/:groupId" element={<Chat />} /> 
-        {/* <Route path="client/login" element={<Form isSignInPage={true} />} /> */}
         <Route path="/signup" element={<Form isSignInPage={false} />} />
         <Route path="/forgot_password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword/>} />
       </Routes>
-    // </div>
   );
 }
 

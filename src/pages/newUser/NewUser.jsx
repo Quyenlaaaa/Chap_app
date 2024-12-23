@@ -3,17 +3,15 @@ import "./newUser.css";
 import { toast } from "react-toastify";
 
 export default function NewUser() {
-  // State to store only necessary form values
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     name: "",
-    roleId: 2, // default roleId
+    roleId: 2, 
   });
 
   const token = localStorage.getItem('token');
 
-  // Handle input changes to update formData
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -22,7 +20,6 @@ export default function NewUser() {
     }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -38,7 +35,6 @@ export default function NewUser() {
 
       if (response.ok) {
         toast.success("User created successfully!");
-        // Clear form after success (optional)
         setFormData({
           email: "",
           password: "",

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
 const CreateGroupModal = ({ onClose, onGroupChange}) => {
-  const [users, setUsers] = useState([]); // Danh sách người dùng từ API
-  const [selectedUsers, setSelectedUsers] = useState([]); // Danh sách người dùng được chọn
-  const [groupName, setGroupName] = useState(''); // Tên nhóm
-  const defaultImage = 'default-avatar.png'; // Hình ảnh mặc định nếu `imagePath` là null
+  const [users, setUsers] = useState([]); 
+  const [selectedUsers, setSelectedUsers] = useState([]); 
+  const [groupName, setGroupName] = useState(''); 
+  const defaultImage = 'default-avatar.png'; 
 
-  // Lấy danh sách người dùng từ API
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -22,7 +21,7 @@ const CreateGroupModal = ({ onClose, onGroupChange}) => {
         }
 
         const data = await response.json();
-        setUsers(data.result || []); // Gán danh sách người dùng
+        setUsers(data.result || []); 
       } catch (err) {
         console.error('Lỗi:', err);
       }
@@ -31,7 +30,6 @@ const CreateGroupModal = ({ onClose, onGroupChange}) => {
     fetchUsers();
   }, []);
 
-  // Xử lý chọn người dùng
   const handleCheckboxChange = (userId) => {
     setSelectedUsers((prevSelected) =>
       prevSelected.includes(userId)
@@ -40,7 +38,6 @@ const CreateGroupModal = ({ onClose, onGroupChange}) => {
     );
   };
 
-  // Xử lý xác nhận tạo nhóm
   const handleConfirm = async () => {
     const memberEmails = users
       .filter((user) => selectedUsers.includes(user.id))
@@ -80,7 +77,7 @@ const CreateGroupModal = ({ onClose, onGroupChange}) => {
 
       onGroupChange(data.result)
       alert('Nhóm đã được tạo thành công!');
-      onClose(); // Đóng modal sau khi xử lý thành công
+      onClose(); 
     } catch (err) {
       console.error('Lỗi:', err);
       alert('Đã xảy ra lỗi khi tạo nhóm.');

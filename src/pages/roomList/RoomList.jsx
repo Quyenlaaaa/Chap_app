@@ -1,12 +1,18 @@
 import "./roomList.css";
-import { DataGrid } from '@mui/x-data-grid';
-import { DeleteOutline } from '@mui/icons-material';
-import {FaEdit} from "react-icons/fa";
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField } from "@mui/material";
-import 'react-toastify/dist/ReactToastify.css';
-
+import { DataGrid } from "@mui/x-data-grid";
+import { DeleteOutline } from "@mui/icons-material";
+import { FaEdit } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+  TextField,
+} from "@mui/material";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function RoomList() {
   const [data, setData] = useState([]);
@@ -17,7 +23,6 @@ export default function RoomList() {
   const [newRoomName, setNewRoomName] = useState("");
   const [newMemberEmails, setNewMemberEmails] = useState("");
   useEffect(() => {
-    // Fetch dữ liệu từ API
     const fetchRooms = async () => {
       try {
         const response = await fetch("http://localhost:8090/api/rooms", {
@@ -29,8 +34,8 @@ export default function RoomList() {
           throw new Error("Failed to fetch rooms");
         }
         const result = await response.json();
-        console.log(result)
-        setData(result.result); // Gán dữ liệu API vào state
+        console.log(result);
+        setData(result.result);
       } catch (error) {
         toast.error("Failed to fetch rooms. Please try again.");
       }
@@ -43,14 +48,17 @@ export default function RoomList() {
     if (!selectedRoom) return;
 
     try {
-      const response = await fetch(`http://localhost:8090/api/rooms/${selectedRoom.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ name: updatedName }),
-      });
+      const response = await fetch(
+        `http://localhost:8090/api/rooms/${selectedRoom.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ name: updatedName }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update room");
@@ -69,7 +77,7 @@ export default function RoomList() {
   };
 
   const handleEditClick = (room) => {
-    console.log(room)
+    console.log(room);
     setSelectedRoom(room);
     setUpdatedName(room.name);
     setOpenDialog(true);
@@ -82,7 +90,9 @@ export default function RoomList() {
   };
 
   const handleCreateRoom = async () => {
-    const memberEmailsArray = newMemberEmails.split(",").map((email) => email.trim());
+    const memberEmailsArray = newMemberEmails
+      .split(",")
+      .map((email) => email.trim());
     try {
       const response = await fetch("http://localhost:8090/api/rooms", {
         method: "POST",
@@ -95,20 +105,19 @@ export default function RoomList() {
           memberEmails: memberEmailsArray,
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to create room");
       }
-  
+
       const result = await response.json();
-      
-      // Thêm phòng mới vào danh sách
-      const newRoom = result.result; // Lấy phần `result` từ JSON trả về
+
+      const newRoom = result.result;
       if (!newRoom.id) {
         throw new Error("Room does not have an ID");
       }
-  
-      setData((prevData) => [...prevData, { id: newRoom.id, ...newRoom }]); // Bảo đảm `id` tồn tại
+
+      setData((prevData) => [...prevData, { id: newRoom.id, ...newRoom }]);
       toast.success("Room created successfully!");
       setOpenDialogCreate(false);
       setNewRoomName("");
@@ -117,7 +126,7 @@ export default function RoomList() {
       toast.error(error.message || "Failed to create room. Please try again.");
     }
   };
-  
+
   const handleDelete = async (id) => {
     try {
       const response = await fetch(`http://localhost:8090/api/rooms/${id}`, {
@@ -144,7 +153,7 @@ export default function RoomList() {
       width: 200,
     },
     { field: "createdByEmail", headerName: "Người tạo", width: 200 },
-    
+
     {
       field: "action",
       headerName: "Điều chỉnh ",
@@ -165,7 +174,6 @@ export default function RoomList() {
           />
         </div>
       ),
-      
     },
   ];
 
@@ -209,8 +217,11 @@ export default function RoomList() {
         </DialogActions>
       </Dialog>
 
-{/* Dialog tạo mới */}
-<Dialog open={openDialogCreate} onClose={() => setOpenDialogCreate(false)}>
+      {/* Dialog tạo mới */}
+      <Dialog
+        open={openDialogCreate}
+        onClose={() => setOpenDialogCreate(false)}
+      >
         <DialogTitle>Tạo nhóm mới</DialogTitle>
         <DialogContent>
           <TextField

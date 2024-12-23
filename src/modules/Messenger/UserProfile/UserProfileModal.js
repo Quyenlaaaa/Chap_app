@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const UserProfileModal = ({ isOpen, onClose, user , onAvatarChange }) => {
+const UserProfileModal = ({ isOpen, onClose, user, onAvatarChange }) => {
   const [name, setName] = useState(user?.name || "Nguyễn Văn A");
   const [email, setEmail] = useState(user?.email || "email@example.com");
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -13,66 +13,68 @@ const UserProfileModal = ({ isOpen, onClose, user , onAvatarChange }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [image, setImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState(user?.imagePath ? `http://localhost:8090/profile/${user.imagePath}` : "");
+  const [previewImage, setPreviewImage] = useState(
+    user?.imagePath ? `http://localhost:8090/profile/${user.imagePath}` : ""
+  );
 
-  // Điều chỉnh khi modal đóng
   useEffect(() => {
     if (user) {
       setName(user.name);
       setEmail(user.email);
-      setPreviewImage(user.imagePath ? `http://localhost:8090/profile/${user.imagePath}` : "");
+      setPreviewImage(
+        user.imagePath ? `http://localhost:8090/profile/${user.imagePath}` : ""
+      );
     }
   }, [user]);
 
   if (!isOpen) return null;
 
- 
-const handleUpdateProfile = async () => { 
-  if (newPassword && newPassword !== confirmPassword) {
-    toast.error("Mật khẩu mới không khớp!"); // Thông báo lỗi khi mật khẩu không khớp
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("name", name || "");
-  formData.append("oldPassword", currentPassword || "");
-  formData.append("newPassword", newPassword || "");
-  if (image) {
-    formData.append("image", image);
-  }
-
-  try {
-    const response = await fetch("http://localhost:8090/api/users/profile", {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Đã xảy ra lỗi khi cập nhật!");
+  const handleUpdateProfile = async () => {
+    if (newPassword && newPassword !== confirmPassword) {
+      toast.error("Mật khẩu mới không khớp!");
+      return;
     }
-    
-    const result = await response.json();
-    toast.success(result.message || "Cập nhật thành công!"); // Thông báo thành công
-    console.log(result.result.imagePath)
-    onAvatarChange(`http://localhost:8090/profile/${result.result.imagePath}`);
-    onClose();
-  } catch (error) {
-    console.error(error);
-    toast.error(error.message || "Đã xảy ra lỗi khi cập nhật!"); // Thông báo lỗi khi có sự cố
-  }
-};
 
+    const formData = new FormData();
+    formData.append("name", name || "");
+    formData.append("oldPassword", currentPassword || "");
+    formData.append("newPassword", newPassword || "");
+    if (image) {
+      formData.append("image", image);
+    }
+
+    try {
+      const response = await fetch("http://localhost:8090/api/users/profile", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Đã xảy ra lỗi khi cập nhật!");
+      }
+
+      const result = await response.json();
+      toast.success(result.message || "Cập nhật thành công!"); // Thông báo thành công
+      console.log(result.result.imagePath);
+      onAvatarChange(
+        `http://localhost:8090/profile/${result.result.imagePath}`
+      );
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Đã xảy ra lỗi khi cập nhật!"); // Thông báo lỗi khi có sự cố
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
       setPreviewImage(URL.createObjectURL(file));
-     
     }
   };
 
@@ -136,9 +138,7 @@ const handleUpdateProfile = async () => {
 
         {/* Mật khẩu */}
         <div className="mb-2 flex items-center">
-          <label className="block text-sm font-medium text-black mb-1 flex-grow">
-            
-          </label>
+          <label className="block text-sm font-medium text-black mb-1 flex-grow"></label>
           <button
             className="ml-4 bg-gray-200 text-blue-500 px-3 py-1 rounded hover:bg-gray-300"
             onClick={() => setShowChangePassword(!showChangePassword)}
@@ -150,7 +150,9 @@ const handleUpdateProfile = async () => {
         {showChangePassword && (
           <>
             <div className="mb-2">
-              <label className="block text-sm font-medium text-black mb-1">Mật khẩu cũ</label>
+              <label className="block text-sm font-medium text-black mb-1">
+                Mật khẩu cũ
+              </label>
               <div className="relative">
                 <input
                   type={showCurrentPassword ? "text" : "password"}
@@ -163,13 +165,15 @@ const handleUpdateProfile = async () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 >
-                  {showCurrentPassword ? '👁️' : '👁️‍🗨️'} {/* Biểu tượng mắt */}
+                  {showCurrentPassword ? "👁️" : "👁️‍🗨️"} 
                 </button>
               </div>
             </div>
 
             <div className="mb-2">
-              <label className="block text-sm font-medium text-black mb-1">Mật khẩu mới</label>
+              <label className="block text-sm font-medium text-black mb-1">
+                Mật khẩu mới
+              </label>
               <div className="relative">
                 <input
                   type={showNewPassword ? "text" : "password"}
@@ -182,13 +186,15 @@ const handleUpdateProfile = async () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
-                  {showNewPassword ? '👁️' : '👁️‍🗨️'} {/* Biểu tượng mắt */}
+                  {showNewPassword ? "👁️" : "👁️‍🗨️"} 
                 </button>
               </div>
             </div>
 
             <div className="mb-2">
-              <label className="block text-sm font-medium text-black mb-1">Xác nhận mật khẩu mới</label>
+              <label className="block text-sm font-medium text-black mb-1">
+                Xác nhận mật khẩu mới
+              </label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
@@ -201,7 +207,7 @@ const handleUpdateProfile = async () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? '👁️' : '👁️‍🗨️'} {/* Biểu tượng mắt */}
+                  {showConfirmPassword ? "👁️" : "👁️‍🗨️"} 
                 </button>
               </div>
             </div>

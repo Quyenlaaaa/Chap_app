@@ -9,7 +9,6 @@ export default function WidgetLg() {
   const Button = ({ type }) => {
     return <button className={"widgetLgButton " + type}>{type}</button>;
   };
-    // Lấy thông tin người dùng
     useEffect(() => {
       const fetchUser = async () => {
         try {
@@ -25,9 +24,8 @@ export default function WidgetLg() {
           }
   
           const data = await response.json();
-          const userData = data.result; // Dữ liệu người dùng từ API
-          setUser(userData); // Lưu thông tin người dùng
-          // Lấy ảnh người dùng
+          const userData = data.result; 
+          setUser(userData); 
           setUserAvatar(`http://localhost:8090/profile/${userData.imagePath}`);
           
         } catch (error) {
@@ -120,11 +118,10 @@ export default function WidgetLg() {
         </tr>
       </table>
 
-       {/* Modal Hồ sơ người dùng */}
        <UserProfileModal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
-        user={user} // Truyền thông tin người dùng vào modal
+        user={user}
       />
     </div>
   );

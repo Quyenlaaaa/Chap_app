@@ -4,12 +4,12 @@
 
 .newUserForm {
   display: flex;
-  flex-direction: column; /* Thay vì wrap, dùng column để sắp xếp các input theo chiều dọc */
-  align-items: flex-start; /* Căn chỉnh các phần tử sang bên trái */
+  flex-direction: column; 
+  align-items: flex-start; 
 }
 
 .newUserItem {
-  width: 40%; /* Mở rộng full chiều rộng */
+  width: 40%; 
   display: flex;
   flex-direction: column;
   margin-top: 10px;
@@ -23,18 +23,18 @@
 }
 
 .newUserItem > input {
-  height: 40px; /* Cải thiện chiều cao để dễ nhìn */
+  height: 40px; 
   padding: 10px;
   border: 1px solid gray;
   border-radius: 5px;
-  width: 100%; /* Đảm bảo input chiếm full chiều rộng */
+  width: 100%; 
 }
 
 .newUserSelect {
   height: 40px;
   padding: 10px;
   border-radius: 5px;
-  width: 100%; /* Đảm bảo select box có chiều rộng đầy đủ */
+  width: 100%; 
 }
 
 .newUserButton {
@@ -50,5 +50,5 @@
 }
 
 .newUserButton:hover {
-  background-color: #003366; /* Thêm hiệu ứng hover cho nút */
+  background-color: #003366; 
 }

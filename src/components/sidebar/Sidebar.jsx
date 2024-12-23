@@ -1,39 +1,31 @@
 import "./sidebar.css";
-import {
-  LineStyle,
-  Timeline,
-  TrendingUp,
-} from "@mui/icons-material";
+import { LineStyle, Timeline, TrendingUp } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 export default function Sidebar() {
   const navigate = useNavigate();
 
-  // Xử lý đăng xuất
   const handleLogout = async () => {
     const confirmLogout = window.confirm("Bạn có muốn đăng xuất?");
     if (confirmLogout) {
       try {
         const token = localStorage.getItem("token");
         const payload = {
-          token: token
-        }
+          token: token,
+        };
 
         const response = await fetch("http://localhost:8090/api/auth/logout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
         });
 
         if (response.ok) {
-          // Xóa token khỏi localStorage
           localStorage.removeItem("token");
 
-          // Điều hướng về trang đăng nhập
           navigate("/login");
 
           toast.success("Bạn đã đăng xuất thành công!");
@@ -78,13 +70,6 @@ export default function Sidebar() {
                 Đổi mật khẩu
               </li>
             </Link>
-            {/* <Link to="admin/auth" className="link">
-              <li className="sidebarListItem">
-                <TrendingUp className="sidebarIcon" />
-                Cập nhật thông tin
-              </li>
-            </Link> */}
-            {/* Đăng xuất */}
             <li className="sidebarListItem" onClick={handleLogout}>
               <TrendingUp className="sidebarIcon" />
               Đăng xuất
